@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Мои записи — МедЦентр{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <div class="d-flex justify-content-between align-items-center mb-5">
+    <div>
+      <h1 class="page-title mb-1">Мои записи</h1>
+      <p class="text-muted mb-0">История ваших визитов в клинику</p>
+    </div>
+    <a href="{% url 'appointments:doctor_list' %}" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-circle me-1"></i>Новая запись
+    </a>
+  </div>
+
+  {% if appointments %}
+
+    <!-- Предстоящие -->
+    {% with upcoming=appointments|dictsortreversed:"slot.date" %}
+    <h5 class="fw-600 mb-3 text-muted small text-uppercase ls-1">Предстоящие</h5>
+    <div class="d-flex flex-column gap-3 mb-5">
+      {% for appt in appointments %}
+        {% if appt.status == 'booked' or appt.status == 'confirmed' %}
+        <div class="appt-row active-appt">
+          <div class="ar-date">
+            <div class="ar-day">{{ appt.slot.date|date:"d" }}</div>
+            <div class="ar-month">{{ appt.slot.date|date:"M" }}</div>
+          </div>
+          <div class="ar-body">
+            <div class="ar-doctor fw-600">{{ appt.slot.doctor_profile.user.full_name }}</div>
+            <div class="ar-meta text-muted small">
+              {{ appt.slot.doctor_profile.specialty.name }}
+              &nbsp;·&nbsp; {{ appt.slot.start_time|time:"H:i" }}–{{ appt.slot.end_time|time:"H:i" }}
+              {% if appt.slot.room %}&nbsp;·&nbsp; каб. {{ appt.slot.room.number }}{% endif %}
+            </div>
+            {% if appt.complaint %}
+            <div class="ar-complaint small text-muted mt-1">
+              <i class="bi bi-chat-square-text me-1"></i>{{ appt.complaint|truncatechars:80 }}
+            </div>
+            {% endif %}
+          </div>
+          <div class="ar-actions">
+            <span class="badge bg-primary-subtle text-primary mb-2 d-block">Забронировано</span>
+            <form method="post" action="{% url 'appointments:cancel' appt.pk %}"
+                  onsubmit="return confirm('Отменить запись к {{ appt.slot.doctor_profile.user.full_name }} на {{ appt.slot.date|date:"d.m.Y" }}?')">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                <i class="bi bi-x-circle me-1"></i>Отменить
+              </button>
+            </form>
+          </div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {% endwith %}
+
+    <!-- Завершённые/отменённые -->
+    <h5 class="fw-600 mb-3 text-muted small text-uppercase ls-1">История</h5>
+    <div class="d-flex flex-column gap-2">
+      {% for appt in appointments %}
+        {% if appt.status != 'booked' and appt.status != 'confirmed' %}
+        <div class="appt-row appt-row--past">
+          <div class="ar-date">
+            <div class="ar-day text-muted">{{ appt.slot.date|date:"d" }}</div>
+            <div class="ar-month text-muted">{{ appt.slot.date|date:"M" }}</div>
+          </div>
+          <div class="ar-body">
+            <div class="ar-doctor fw-500 text-muted">{{ appt.slot.doctor_profile.user.full_name }}</div>
+            <div class="ar-meta text-muted small">
+              {{ appt.slot.doctor_profile.specialty.name }}
+              &nbsp;·&nbsp; {{ appt.slot.start_time|time:"H:i" }}
+            </div>
+          </div>
+          <div>
+            {% if appt.status == 'completed' %}
+              <span class="badge bg-success-subtle text-success">Завершено</span>
+            {% elif appt.status == 'cancelled' %}
+              <span class="badge bg-danger-subtle text-danger">Отменено</span>
+            {% elif appt.status == 'no_show' %}
+              <span class="badge bg-warning-subtle text-warning">Неявка</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+  {% else %}
+  <div class="text-center py-6 text-muted">
+    <i class="bi bi-calendar2 fs-1 mb-3 d-block opacity-50"></i>
+    <h5>Записей пока нет</h5>
+    <p>Запишитесь к врачу прямо сейчас</p>
+    <a href="{% url 'appointments:doctor_list' %}" class="btn btn-primary px-4">
+      <i class="bi bi-search me-2"></i>Найти врача
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

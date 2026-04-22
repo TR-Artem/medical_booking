@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Подтверждение записи — МедЦентр{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-4 p-md-5">
+
+          <h4 class="fw-700 mb-4 text-center">
+            <i class="bi bi-calendar-check text-primary me-2"></i>Подтверждение записи
+          </h4>
+
+          <!-- Детали -->
+          <div class="confirm-details mb-4">
+            <div class="cd-row">
+              <span class="cd-label"><i class="bi bi-person-heart me-2 text-primary"></i>Врач</span>
+              <span class="cd-value fw-600">{{ slot.doctor_profile.user.full_name }}</span>
+            </div>
+            <div class="cd-row">
+              <span class="cd-label"><i class="bi bi-stethoscope me-2 text-primary"></i>Специальность</span>
+              <span class="cd-value">{{ slot.doctor_profile.specialty.name }}</span>
+            </div>
+            <div class="cd-row">
+              <span class="cd-label"><i class="bi bi-calendar3 me-2 text-primary"></i>Дата</span>
+              <span class="cd-value fw-600">{{ slot.date|date:"d E Y (l)" }}</span>
+            </div>
+            <div class="cd-row">
+              <span class="cd-label"><i class="bi bi-clock me-2 text-primary"></i>Время</span>
+              <span class="cd-value fw-600">{{ slot.start_time|time:"H:i" }} — {{ slot.end_time|time:"H:i" }}</span>
+            </div>
+            {% if slot.room %}
+            <div class="cd-row">
+              <span class="cd-label"><i class="bi bi-door-open me-2 text-primary"></i>Кабинет</span>
+              <span class="cd-value">№{{ slot.room.number }}, {{ slot.room.floor }} этаж</span>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Форма подтверждения -->
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-4">
+              <label class="form-label fw-500">Жалоба / причина визита <span class="text-muted">(необязательно)</span></label>
+              <textarea name="complaint" class="form-control" rows="3"
+                        placeholder="Опишите кратко вашу проблему или цель визита"></textarea>
+            </div>
+
+            <div class="alert alert-info border-0 py-2 small mb-4">
+              <i class="bi bi-info-circle me-2"></i>
+              После записи на e-mail <strong>{{ user.email }}</strong> придёт подтверждение.
+              За 24 часа до визита — напоминание.
+            </div>
+
+            <div class="d-flex gap-3">
+              <a href="{% url 'appointments:slot_list' slot.doctor_profile.pk %}"
+                 class="btn btn-outline-secondary flex-fill">
+                <i class="bi bi-arrow-left me-1"></i>Назад
+              </a>
+              <button type="submit" class="btn btn-primary flex-fill py-2">
+                <i class="bi bi-check-lg me-1"></i>Подтвердить запись
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

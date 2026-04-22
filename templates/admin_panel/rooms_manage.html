@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Кабинеты — МедЦентр{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="page-title mb-1">Кабинеты</h1>
+      <p class="text-muted mb-0">Управление кабинетами приёма</p>
+    </div>
+    <a href="{% url 'appointments:admin_dashboard' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i>Назад
+    </a>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Форма добавления -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-4">
+          <h6 class="fw-700 mb-3">
+            <i class="bi bi-plus-circle text-primary me-2"></i>Добавить кабинет
+          </h6>
+          <form method="post" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create">
+            <div class="mb-3">
+              <label class="form-label fw-500 small">Номер <span class="text-danger">*</span></label>
+              <input type="text" name="number" class="form-control" placeholder="101" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-500 small">Название / профиль</label>
+              <input type="text" name="name" class="form-control" placeholder="Кардиология">
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-500 small">Этаж</label>
+              <input type="number" name="floor" class="form-control" value="1" min="1" max="20">
+            </div>
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-plus me-1"></i>Добавить
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Список кабинетов -->
+    <div class="col-md-8">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Номер</th>
+              <th>Название</th>
+              <th>Этаж</th>
+              <th>Статус</th>
+              <th class="text-end">Действие</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for room in rooms %}
+            <tr class="{% if not room.is_active %}text-muted{% endif %}">
+              <td class="fw-700 fs-5">{{ room.number }}</td>
+              <td>{{ room.name|default:"—" }}</td>
+              <td>{{ room.floor }} этаж</td>
+              <td>
+                {% if room.is_active %}
+                  <span class="badge bg-success-subtle text-success">Активен</span>
+                {% else %}
+                  <span class="badge bg-secondary-subtle text-secondary">Неактивен</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <form method="post">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="toggle">
+                  <input type="hidden" name="room_id" value="{{ room.pk }}">
+                  <button type="submit"
+                          class="btn btn-sm {% if room.is_active %}btn-outline-secondary{% else %}btn-outline-success{% endif %}">
+                    {% if room.is_active %}
+                      <i class="bi bi-pause-circle me-1"></i>Деактивировать
+                    {% else %}
+                      <i class="bi bi-play-circle me-1"></i>Активировать
+                    {% endif %}
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="text-center text-muted py-4">Кабинетов нет. Добавьте первый.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

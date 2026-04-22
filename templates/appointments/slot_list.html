@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Запись к {{ doctor_profile.user.full_name }} — МедЦентр{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'appointments:doctor_list' %}">Врачи</a></li>
+      <li class="breadcrumb-item active">{{ doctor_profile.user.full_name }}</li>
+    </ol>
+  </nav>
+
+  <!-- Карточка врача -->
+  <div class="doctor-hero-card mb-5">
+    <div class="dhc-photo">
+      {% if doctor_profile.photo %}
+        <img src="{{ doctor_profile.photo.url }}" alt="{{ doctor_profile.user.full_name }}">
+      {% else %}
+        <div class="dc-photo-placeholder dc-photo-placeholder--lg">
+          <i class="bi bi-person-fill"></i>
+        </div>
+      {% endif %}
+    </div>
+    <div class="dhc-info">
+      <span class="badge bg-primary-subtle text-primary mb-2">{{ doctor_profile.specialty.name }}</span>
+      <h2 class="fw-700 mb-1">{{ doctor_profile.user.full_name }}</h2>
+      {% if doctor_profile.experience_years %}
+      <p class="text-muted mb-2">
+        <i class="bi bi-award me-1 text-primary"></i>Стаж {{ doctor_profile.experience_years }} лет
+      </p>
+      {% endif %}
+      {% if doctor_profile.bio %}
+      <p class="text-muted mb-0">{{ doctor_profile.bio }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Слоты -->
+  <h4 class="fw-700 mb-4">
+    <i class="bi bi-calendar3 me-2 text-primary"></i>Доступные даты и время
+  </h4>
+
+  {% if grouped_slots %}
+    {% for date, slots in grouped_slots.items %}
+    <div class="mb-4">
+      <div class="slot-date-label">
+        <i class="bi bi-calendar-event me-2"></i>
+        {{ date|date:"l, d E Y" }}
+      </div>
+      <div class="slot-grid">
+        {% for slot in slots %}
+        <a href="{% url 'appointments:book' slot.pk %}"
+           class="slot-chip">
+          {{ slot.start_time|time:"H:i" }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+
+  {% else %}
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-calendar-x fs-1 mb-3 d-block opacity-50"></i>
+    <h5>Свободных слотов нет</h5>
+    <p>Расписание ещё не добавлено или все слоты заняты.<br>
+       Попробуйте позже или выберите другого врача.</p>
+    <a href="{% url 'appointments:doctor_list' %}" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i>К списку врачей
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

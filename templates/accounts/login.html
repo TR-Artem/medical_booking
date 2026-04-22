@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}Вход — МедЦентр{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-5 col-lg-4">
+        <div class="auth-card shadow-sm">
+          <div class="auth-header text-center mb-4">
+            <div class="auth-icon mb-3">
+              <i class="bi bi-heart-pulse-fill"></i>
+            </div>
+            <h3 class="fw-700">Вход в систему</h3>
+            <p class="text-muted small">Введите данные вашего аккаунта</p>
+          </div>
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label class="form-label fw-500">{{ form.username.label }}</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="bi bi-person text-muted"></i>
+                </span>
+                <input type="text" name="username"
+                       class="form-control border-start-0 {% if form.username.errors %}is-invalid{% endif %}"
+                       placeholder="Логин или e-mail"
+                       value="{{ form.username.value|default:'' }}"
+                       autofocus>
+              </div>
+              {% for err in form.username.errors %}
+                <div class="invalid-feedback d-block">{{ err }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-500">{{ form.password.label }}</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="bi bi-lock text-muted"></i>
+                </span>
+                <input type="password" name="password" id="passwordInput"
+                       class="form-control border-start-0 border-end-0 {% if form.password.errors %}is-invalid{% endif %}"
+                       placeholder="Пароль">
+                <button type="button" class="input-group-text bg-light border-start-0"
+                        onclick="togglePassword()">
+                  <i class="bi bi-eye" id="eyeIcon"></i>
+                </button>
+              </div>
+              {% for err in form.password.errors %}
+                <div class="invalid-feedback d-block">{{ err }}</div>
+              {% endfor %}
+            </div>
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger py-2 border-0 mb-3">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              {% for err in form.non_field_errors %}{{ err }}{% endfor %}
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary w-100 py-2">
+              <i class="bi bi-box-arrow-in-right me-2"></i>Войти
+            </button>
+          </form>
+
+          <hr class="my-4">
+          <p class="text-center text-muted small mb-0">
+            Нет аккаунта?
+            <a href="{% url 'accounts:register' %}" class="text-primary fw-500">Зарегистрироваться</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword() {
+  const inp = document.getElementById('passwordInput');
+  const icon = document.getElementById('eyeIcon');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.className = 'bi bi-eye-slash';
+  } else {
+    inp.type = 'password';
+    icon.className = 'bi bi-eye';
+  }
+}
+</script>
+{% endblock %}

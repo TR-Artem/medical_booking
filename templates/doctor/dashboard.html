@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}Мой приём — МедЦентр{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <div class="d-flex justify-content-between align-items-start mb-5">
+    <div>
+      <h1 class="page-title mb-1">Кабинет врача</h1>
+      <p class="text-muted mb-0">{{ doctor_profile.user.full_name }} &nbsp;·&nbsp; {{ doctor_profile.specialty.name }}</p>
+    </div>
+    <span class="badge bg-primary-subtle text-primary px-3 py-2">
+      <i class="bi bi-calendar3 me-1"></i>{{ today|date:"d E Y" }}
+    </span>
+  </div>
+
+  <!-- ══ Сегодняшний приём ══════════════════════════════════════════════════ -->
+  <h5 class="section-label mb-3">
+    <i class="bi bi-sun me-2 text-warning"></i>Сегодня — {{ today|date:"d E" }}
+  </h5>
+
+  {% if todays_appointments %}
+  <div class="table-responsive mb-5">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Время</th>
+          <th>Пациент</th>
+          <th>Кабинет</th>
+          <th>Жалоба</th>
+          <th>Статус</th>
+          <th class="text-end">Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for appt in todays_appointments %}
+        <tr>
+          <td class="fw-600 text-primary">
+            {{ appt.slot.start_time|time:"H:i" }}
+          </td>
+          <td>
+            <div class="fw-500">{{ appt.patient.full_name }}</div>
+            <div class="text-muted small">{{ appt.patient.phone }}</div>
+          </td>
+          <td>{{ appt.slot.room|default:"—" }}</td>
+          <td class="text-muted small">{{ appt.complaint|default:"—"|truncatechars:50 }}</td>
+          <td>
+            {% if appt.status == 'booked' %}
+              <span class="badge bg-primary-subtle text-primary">Ожидается</span>
+            {% elif appt.status == 'completed' %}
+              <span class="badge bg-success-subtle text-success">Явился</span>
+            {% elif appt.status == 'no_show' %}
+              <span class="badge bg-warning-subtle text-warning">Неявка</span>
+            {% elif appt.status == 'cancelled' %}
+              <span class="badge bg-danger-subtle text-danger">Отменено</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            {% if appt.status == 'booked' %}
+            <div class="btn-group btn-group-sm">
+              <form method="post" action="{% url 'appointments:mark_attendance' appt.pk %}" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="attended">
+                <button type="submit" class="btn btn-outline-success" title="Пациент явился">
+                  <i class="bi bi-check-lg"></i>
+                </button>
+              </form>
+              <form method="post" action="{% url 'appointments:mark_attendance' appt.pk %}" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="no_show">
+                <button type="submit" class="btn btn-outline-warning" title="Неявка">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </form>
+            </div>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="alert alert-light border-0 mb-5 text-muted">
+    <i class="bi bi-info-circle me-2"></i>На сегодня записей нет.
+  </div>
+  {% endif %}
+
+  <!-- ══ Предстоящие записи ════════════════════════════════════════════════ -->
+  {% if upcoming %}
+  <h5 class="section-label mb-3">
+    <i class="bi bi-calendar-week me-2 text-primary"></i>Ближайшие записи
+  </h5>
+  <div class="d-flex flex-column gap-2">
+    {% for appt in upcoming %}
+    <div class="appt-row">
+      <div class="ar-date">
+        <div class="ar-day">{{ appt.slot.date|date:"d" }}</div>
+        <div class="ar-month">{{ appt.slot.date|date:"M" }}</div>
+      </div>
+      <div class="ar-body">
+        <div class="fw-500">{{ appt.patient.full_name }}</div>
+        <div class="text-muted small">
+          {{ appt.slot.start_time|time:"H:i" }}
+          {% if appt.slot.room %}&nbsp;·&nbsp; каб. {{ appt.slot.room.number }}{% endif %}
+        </div>
+      </div>
+      <span class="badge bg-primary-subtle text-primary">{{ appt.slot.date|date:"l" }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

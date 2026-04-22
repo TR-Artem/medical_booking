@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% block title %}МедЦентр — Онлайн-запись к врачу{% endblock %}
+
+{% block content %}
+
+<!-- ══ HERO ══════════════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="container position-relative">
+    <div class="row align-items-center min-vh-75 py-5">
+      <div class="col-lg-6">
+        <span class="badge bg-primary-subtle text-primary mb-3 px-3 py-2 rounded-pill">
+          <i class="bi bi-shield-check me-1"></i>Запись онлайн 24/7
+        </span>
+        <h1 class="hero-title">
+          Запишитесь к врачу<br>
+          <span class="text-gradient">без ожидания</span>
+        </h1>
+        <p class="hero-subtitle">
+          Выбирайте врача, удобное время и записывайтесь в один клик —
+          в любое время суток, без звонков в регистратуру.
+        </p>
+        <div class="d-flex flex-wrap gap-3 mt-4">
+          <a href="{% url 'appointments:doctor_list' %}" class="btn btn-primary btn-lg px-4">
+            <i class="bi bi-search me-2"></i>Найти врача
+          </a>
+          {% if not user.is_authenticated %}
+          <a href="{% url 'accounts:register' %}" class="btn btn-outline-primary btn-lg px-4">
+            Зарегистрироваться
+          </a>
+          {% endif %}
+        </div>
+        <!-- Доверие -->
+        <div class="d-flex gap-4 mt-5">
+          <div class="trust-item">
+            <div class="trust-number">24/7</div>
+            <div class="trust-label">запись онлайн</div>
+          </div>
+          <div class="trust-divider"></div>
+          <div class="trust-item">
+            <div class="trust-number">0</div>
+            <div class="trust-label">двойных записей</div>
+          </div>
+          <div class="trust-divider"></div>
+          <div class="trust-item">
+            <div class="trust-number">3</div>
+            <div class="trust-label">шага до записи</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 d-none d-lg-flex justify-content-center">
+        <div class="hero-card-wrap">
+          <!-- Декоративная карточка записи -->
+          <div class="hero-card shadow-lg">
+            <div class="hc-header">
+              <i class="bi bi-calendar2-heart-fill text-primary me-2"></i>
+              <span class="fw-600">Ваша запись</span>
+            </div>
+            <div class="hc-body">
+              <div class="hc-doctor d-flex align-items-center gap-3 mb-3">
+                <div class="hc-avatar bg-primary-subtle text-primary">
+                  <i class="bi bi-person-fill fs-4"></i>
+                </div>
+                <div>
+                  <div class="fw-600">Иванова А.С.</div>
+                  <div class="text-muted small">Кардиолог</div>
+                </div>
+                <span class="badge bg-success ms-auto">Подтверждено</span>
+              </div>
+              <div class="hc-details">
+                <div class="hc-detail"><i class="bi bi-calendar3"></i> Завтра, 15 января</div>
+                <div class="hc-detail"><i class="bi bi-clock"></i> 10:30 — 11:00</div>
+                <div class="hc-detail"><i class="bi bi-door-open"></i> Кабинет 205, 2 этаж</div>
+              </div>
+            </div>
+            <!-- Уведомление-тост -->
+            <div class="hc-toast">
+              <i class="bi bi-bell-fill text-warning me-2"></i>
+              <span class="small">Напоминание отправлено на e-mail</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ КАК ЭТО РАБОТАЕТ ═══════════════════════════════════════════════════════ -->
+<section class="section-how py-6">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title">Запись в 3 шага</h2>
+      <p class="text-muted">Простой процесс — от выбора врача до подтверждения</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="step-card">
+          <div class="step-number">01</div>
+          <div class="step-icon"><i class="bi bi-search-heart"></i></div>
+          <h5 class="step-title">Выберите врача</h5>
+          <p class="step-desc text-muted">Найдите нужного специалиста по направлению или выберите из списка врачей клиники.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="step-card step-card--accent">
+          <div class="step-number">02</div>
+          <div class="step-icon"><i class="bi bi-calendar3-event"></i></div>
+          <h5 class="step-title">Выберите время</h5>
+          <p class="step-desc">Просмотрите доступные слоты и выберите удобное время приёма — только свободные окошки.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="step-card">
+          <div class="step-number">03</div>
+          <div class="step-icon"><i class="bi bi-check2-circle"></i></div>
+          <h5 class="step-title">Подтверждение</h5>
+          <p class="step-desc text-muted">Запись подтверждена мгновенно. Напоминание придёт на e-mail за 24 часа до визита.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ СПЕЦИАЛЬНОСТИ ══════════════════════════════════════════════════════════ -->
+{% if specialties %}
+<section class="section-specialties py-6 bg-light-subtle">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-end mb-5">
+      <div>
+        <h2 class="section-title mb-1">Специальности</h2>
+        <p class="text-muted mb-0">Запишитесь к нужному специалисту</p>
+      </div>
+      <a href="{% url 'appointments:doctor_list' %}" class="btn btn-outline-primary btn-sm">
+        Все врачи <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+    <div class="row g-3">
+      {% for spec in specialties %}
+      <div class="col-6 col-md-3">
+        <a href="{% url 'appointments:doctor_list' %}?specialty={{ spec.pk }}"
+           class="specialty-card d-block text-decoration-none">
+          <div class="sc-icon">
+            <i class="bi {{ spec.icon|default:'bi-heart-pulse' }}"></i>
+          </div>
+          <div class="sc-name">{{ spec.name }}</div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ══ ВРАЧИ ══════════════════════════════════════════════════════════════════ -->
+{% if doctors %}
+<section class="section-doctors py-6">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-end mb-5">
+      <div>
+        <h2 class="section-title mb-1">Наши врачи</h2>
+        <p class="text-muted mb-0">Опытные специалисты вашей клиники</p>
+      </div>
+      <a href="{% url 'appointments:doctor_list' %}" class="btn btn-outline-primary btn-sm">
+        Все врачи <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+    <div class="row g-4">
+      {% for dp in doctors %}
+      <div class="col-md-4 col-lg-4">
+        <div class="doctor-card h-100">
+          <div class="dc-photo">
+            {% if dp.photo %}
+              <img src="{{ dp.photo.url }}" alt="{{ dp.user.full_name }}">
+            {% else %}
+              <div class="dc-photo-placeholder">
+                <i class="bi bi-person-fill"></i>
+              </div>
+            {% endif %}
+          </div>
+          <div class="dc-body">
+            <div class="dc-specialty">{{ dp.specialty.name }}</div>
+            <h5 class="dc-name">{{ dp.user.full_name }}</h5>
+            {% if dp.experience_years %}
+            <p class="dc-exp text-muted small">
+              <i class="bi bi-award me-1"></i>Стаж {{ dp.experience_years }} лет
+            </p>
+            {% endif %}
+            {% if dp.bio %}
+            <p class="dc-bio text-muted small">{{ dp.bio|truncatechars:100 }}</p>
+            {% endif %}
+            <a href="{% url 'appointments:slot_list' dp.pk %}"
+               class="btn btn-primary btn-sm mt-auto w-100">
+              <i class="bi bi-calendar-plus me-1"></i>Записаться
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

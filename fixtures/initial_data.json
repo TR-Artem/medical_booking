@@ -1,0 +1,82 @@
+[
+  {
+    "model": "appointments.specialty",
+    "pk": 1,
+    "fields": {
+      "name": "Кардиология",
+      "description": "Диагностика и лечение заболеваний сердечно-сосудистой системы",
+      "icon": "bi-heart-pulse",
+      "is_active": true
+    }
+  },
+  {
+    "model": "appointments.specialty",
+    "pk": 2,
+    "fields": {
+      "name": "Терапия",
+      "description": "Первичная медицинская помощь и общая терапия",
+      "icon": "bi-clipboard2-pulse",
+      "is_active": true
+    }
+  },
+  {
+    "model": "appointments.specialty",
+    "pk": 3,
+    "fields": {
+      "name": "Неврология",
+      "description": "Диагностика и лечение заболеваний нервной системы",
+      "icon": "bi-activity",
+      "is_active": true
+    }
+  },
+  {
+    "model": "appointments.specialty",
+    "pk": 4,
+    "fields": {
+      "name": "Офтальмология",
+      "description": "Диагностика и лечение заболеваний органов зрения",
+      "icon": "bi-eye",
+      "is_active": true
+    }
+  },
+  {
+    "model": "appointments.specialty",
+    "pk": 5,
+    "fields": {
+      "name": "Хирургия",
+      "description": "Оперативное и консервативное лечение хирургических заболеваний",
+      "icon": "bi-scissors",
+      "is_active": true
+    }
+  },
+  {
+    "model": "appointments.specialty",
+    "pk": 6,
+    "fields": {
+      "name": "Ортопедия",
+      "description": "Лечение заболеваний опорно-двигательного аппарата",
+      "icon": "bi-person-walking",
+      "is_active": true
+    }
+  },
+  {
+    "model": "appointments.room",
+    "pk": 1,
+    "fields": { "number": "101", "name": "Кардиология", "floor": 1, "is_active": true }
+  },
+  {
+    "model": "appointments.room",
+    "pk": 2,
+    "fields": { "number": "102", "name": "Терапия", "floor": 1, "is_active": true }
+  },
+  {
+    "model": "appointments.room",
+    "pk": 3,
+    "fields": { "number": "201", "name": "Неврология", "floor": 2, "is_active": true }
+  },
+  {
+    "model": "appointments.room",
+    "pk": 4,
+    "fields": { "number": "202", "name": "Офтальмология", "floor": 2, "is_active": true }
+  }
+]

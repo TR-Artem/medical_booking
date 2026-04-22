@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block title %}Панель администратора — МедЦентр{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4 px-lg-5">
+
+  <div class="d-flex justify-content-between align-items-start mb-5">
+    <div>
+      <h1 class="page-title mb-1">Панель администратора</h1>
+      <p class="text-muted mb-0">Сводная загрузка клиники на {{ today|date:"d E Y" }}</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'appointments:manage_schedule' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-calendar-week me-1"></i>Расписание
+      </a>
+      <a href="{% url 'appointments:manage_rooms' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-door-open me-1"></i>Кабинеты
+      </a>
+    </div>
+  </div>
+
+  <!-- ══ Статистика ══════════════════════════════════════════════════════════ -->
+  <div class="row g-3 mb-5">
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="sc-icon sc-icon--blue"><i class="bi bi-calendar-check"></i></div>
+        <div class="sc-value">{{ stats.total_today }}</div>
+        <div class="sc-label">Записей сегодня</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="sc-icon sc-icon--green"><i class="bi bi-people"></i></div>
+        <div class="sc-value">{{ stats.total_doctors }}</div>
+        <div class="sc-label">Активных врачей</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="sc-icon sc-icon--teal"><i class="bi bi-door-open"></i></div>
+        <div class="sc-value">{{ stats.total_rooms }}</div>
+        <div class="sc-label">Кабинетов</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="sc-icon sc-icon--orange"><i class="bi bi-x-circle"></i></div>
+        <div class="sc-value">{{ stats.cancelled_today }}</div>
+        <div class="sc-label">Отменено сегодня</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Записи сегодня ═════════════════════════════════════════════════════ -->
+  <h5 class="section-label mb-3">
+    <i class="bi bi-list-check me-2 text-primary"></i>Все записи на сегодня
+  </h5>
+
+  {% if todays_appointments %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Время</th>
+          <th>Пациент</th>
+          <th>Врач</th>
+          <th>Специальность</th>
+          <th>Кабинет</th>
+          <th>Статус</th>
+          <th class="text-end">Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for appt in todays_appointments %}
+        <tr>
+          <td class="fw-600 text-primary text-nowrap">
+            {{ appt.slot.start_time|time:"H:i" }}
+          </td>
+          <td>
+            <div class="fw-500">{{ appt.patient.full_name }}</div>
+            <div class="text-muted small">{{ appt.patient.phone|default:"—" }}</div>
+          </td>
+          <td>{{ appt.slot.doctor_profile.user.full_name }}</td>
+          <td>
+            <span class="badge bg-light text-muted border">
+              {{ appt.slot.doctor_profile.specialty.name }}
+            </span>
+          </td>
+          <td>{{ appt.slot.room|default:"—" }}</td>
+          <td>
+            {% if appt.status == 'booked' %}
+              <span class="badge bg-primary-subtle text-primary">Забронировано</span>
+            {% elif appt.status == 'completed' %}
+              <span class="badge bg-success-subtle text-success">Завершено</span>
+            {% elif appt.status == 'no_show' %}
+              <span class="badge bg-warning-subtle text-warning">Неявка</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            {% if appt.status == 'booked' %}
+            <form method="post" action="{% url 'appointments:admin_cancel' appt.pk %}"
+                  onsubmit="return confirm('Отменить запись?')">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-x-circle me-1"></i>Отменить
+              </button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="alert alert-light border-0 text-muted">
+    <i class="bi bi-info-circle me-2"></i>На сегодня записей нет.
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

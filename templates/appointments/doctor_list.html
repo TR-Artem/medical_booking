@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Врачи — МедЦентр{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <div class="page-header mb-5">
+    <h1 class="page-title">Наши специалисты</h1>
+    <p class="text-muted">Выберите врача и запишитесь онлайн</p>
+  </div>
+
+  <!-- Фильтр по специальности -->
+  <div class="spec-filter mb-5">
+    <a href="{% url 'appointments:doctor_list' %}"
+       class="spec-chip {% if not selected_specialty %}spec-chip--active{% endif %}">
+      Все специальности
+    </a>
+    {% for spec in specialties %}
+    <a href="?specialty={{ spec.pk }}"
+       class="spec-chip {% if selected_specialty.pk == spec.pk %}spec-chip--active{% endif %}">
+      <i class="bi {{ spec.icon|default:'bi-heart-pulse' }} me-1"></i>{{ spec.name }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Список врачей -->
+  {% if doctors %}
+  <div class="row g-4">
+    {% for dp in doctors %}
+    <div class="col-md-6 col-lg-4">
+      <div class="doctor-card h-100">
+        <div class="dc-photo">
+          {% if dp.photo %}
+            <img src="{{ dp.photo.url }}" alt="{{ dp.user.full_name }}">
+          {% else %}
+            <div class="dc-photo-placeholder">
+              <i class="bi bi-person-fill"></i>
+            </div>
+          {% endif %}
+        </div>
+        <div class="dc-body">
+          <div class="dc-specialty">{{ dp.specialty.name }}</div>
+          <h5 class="dc-name">{{ dp.user.full_name }}</h5>
+          {% if dp.experience_years %}
+          <p class="text-muted small">
+            <i class="bi bi-award me-1 text-primary"></i>Стаж {{ dp.experience_years }} лет
+          </p>
+          {% endif %}
+          {% if dp.bio %}
+          <p class="text-muted small dc-bio">{{ dp.bio|truncatechars:120 }}</p>
+          {% endif %}
+          <a href="{% url 'appointments:slot_list' dp.pk %}"
+             class="btn btn-primary btn-sm w-100 mt-auto">
+            <i class="bi bi-calendar-plus me-1"></i>Записаться
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-person-x fs-1 mb-3 d-block opacity-50"></i>
+    <h5>Врачи не найдены</h5>
+    <p>Попробуйте выбрать другую специальность</p>
+    <a href="{% url 'appointments:doctor_list' %}" class="btn btn-outline-primary btn-sm">
+      Сбросить фильтр
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
