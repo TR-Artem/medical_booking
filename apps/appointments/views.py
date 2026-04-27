@@ -91,6 +91,11 @@ def book_appointment(request, slot_id):
     """
     slot = get_object_or_404(TimeSlot, pk=slot_id)
 
+    # Проверка: пациент уже записан на этот слот?
+    if Appointment.objects.filter(slot=slot, patient=request.user).exclude(status=Appointment.Status.CANCELLED).exists():
+        messages.error(request, 'Вы уже записаны на этот слот.')
+        return redirect('appointments:my_appointments')
+
     # Предварительная проверка (без блокировки)
     if not slot.is_available:
         messages.error(request, 'Этот слот уже занят или недоступен. Выберите другое время.')
@@ -333,18 +338,22 @@ def manage_schedule(request):
         action = request.POST.get('action')
 
         if action == 'create':
-            doctor_id = request.POST.get('doctor_profile_id')
+            doctor_id = request.POST.get('doctor_profile_id') or None
             room_id = request.POST.get('room_id') or None
             date_val = request.POST.get('date')
             start_time = request.POST.get('start_time')
             end_time = request.POST.get('end_time')
             slot_duration = int(request.POST.get('slot_duration', 30))
 
+            if not doctor_id:
+                messages.error(request, 'Выберите врача.')
+                return redirect('appointments:manage_schedule')
+
             schedule, created = Schedule.objects.update_or_create(
-                doctor_profile_id=doctor_id,
+                doctor_profile_id=int(doctor_id),
                 date=date_val,
                 defaults={
-                    'room_id': room_id,
+                    'room_id': int(room_id) if room_id else None,
                     'start_time': start_time,
                     'end_time': end_time,
                     'slot_duration': slot_duration,

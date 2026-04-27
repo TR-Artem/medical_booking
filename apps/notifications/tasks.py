@@ -4,7 +4,10 @@ Celery-задачи модуля уведомлений.
 """
 from celery import shared_task
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
+
+from apps.appointments.models import Appointment
+from .services import send_reminder
 
 
 @shared_task
@@ -14,9 +17,6 @@ def send_appointment_reminders():
     Запускать каждый час через Celery Beat:
       crontab(minute=0)  — каждый час в :00
     """
-    from apps.appointments.models import Appointment
-    from .services import send_reminder
-
     now = timezone.now()
     # Окно: визит от 23 до 25 часов с текущего момента
     window_start = now + timedelta(hours=23)
@@ -32,7 +32,7 @@ def send_appointment_reminders():
     for appt in appointments:
         # Дополнительная проверка по времени
         appt_dt = timezone.make_aware(
-            __import__('datetime').datetime.combine(appt.slot.date, appt.slot.start_time)
+            datetime.combine(appt.slot.date, appt.slot.start_time)
         )
         if window_start <= appt_dt <= window_end:
             send_reminder(appt)

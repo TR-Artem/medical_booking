@@ -93,8 +93,25 @@ class Schedule(models.Model):
         # Удаляем только свободные слоты (занятые не трогаем)
         self.slots.filter(is_booked=False).delete()
 
-        start = datetime.combine(self.date, self.start_time)
-        end = datetime.combine(self.date, self.end_time)
+        # Преобразуем строки в нужные типы если пришли из POST
+        slot_date = self.date
+        slot_start = self.start_time
+        slot_end = self.end_time
+
+        if isinstance(slot_date, str):
+            from datetime import date as date_type
+            slot_date = date_type.fromisoformat(slot_date)
+        if isinstance(slot_start, str):
+            from datetime import time as time_type
+            h, m = slot_start.split(':')[:2]
+            slot_start = time_type(int(h), int(m))
+        if isinstance(slot_end, str):
+            from datetime import time as time_type
+            h, m = slot_end.split(':')[:2]
+            slot_end = time_type(int(h), int(m))
+
+        start = datetime.combine(slot_date, slot_start)
+        end = datetime.combine(slot_date, slot_end)
         delta = timedelta(minutes=self.slot_duration)
 
         current = start
