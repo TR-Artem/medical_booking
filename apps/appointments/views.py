@@ -23,6 +23,31 @@ from apps.notifications.services import (
 #  ПАЦИЕНТ — выбор врача и запись
 # ══════════════════════════════════════════════════════════════════════════════
 
+from functools import wraps
+
+def admin_required(view_func):
+    """Декоратор для проверки прав администратора клиники."""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not (request.user.is_authenticated and
+                (request.user.is_clinic_admin or request.user.is_sysadmin)):
+            messages.error(request, 'Доступ только для администраторов клиники.')
+            return redirect('core:home')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+def doctor_required(view_func):
+    """Декоратор для проверки прав врача."""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated or not request.user.is_doctor:
+            messages.error(request, 'Доступ только для врачей.')
+            return redirect('core:home')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
 def doctor_list(request):
     """
     Список врачей с фильтрацией по специальности.
@@ -276,19 +301,9 @@ def block_slot(request, slot_id):
 #  АДМИНИСТРАТОР КЛИНИКИ — панель управления
 # ══════════════════════════════════════════════════════════════════════════════
 
-def _require_admin(request):
-    """Проверка, что пользователь является администратором или системным администратором."""
-    return request.user.is_authenticated and (
-        request.user.is_clinic_admin or request.user.is_sysadmin
-    )
-
-
 @login_required
+@admin_required
 def admin_dashboard(request):
-    """Панель администратора клиники — сводная загрузка."""
-    if not _require_admin(request):
-        messages.error(request, 'Доступ только для администраторов клиники.')
-        return redirect('core:home')
 
     today = timezone.now().date()
 
@@ -326,11 +341,9 @@ def admin_dashboard(request):
 
 
 @login_required
+@admin_required
 def manage_schedule(request):
     """Администратор управляет расписанием врачей."""
-    if not _require_admin(request):
-        return redirect('core:home')
-
     doctors = DoctorProfile.objects.filter(is_active=True).select_related('user', 'specialty')
     rooms = Room.objects.filter(is_active=True)
 
@@ -394,11 +407,9 @@ def manage_schedule(request):
 
 
 @login_required
+@admin_required
 def manage_rooms(request):
     """Администратор управляет кабинетами."""
-    if not _require_admin(request):
-        return redirect('core:home')
-
     if request.method == 'POST':
         action = request.POST.get('action')
 
@@ -425,11 +436,9 @@ def manage_rooms(request):
 
 @login_required
 @require_POST
+@admin_required
 def admin_cancel_appointment(request, appointment_id):
     """Администратор отменяет запись пациента."""
-    if not _require_admin(request):
-        return redirect('core:home')
-
     appointment = get_object_or_404(Appointment, pk=appointment_id)
     appointment.cancel()
     send_cancellation_notice(appointment)

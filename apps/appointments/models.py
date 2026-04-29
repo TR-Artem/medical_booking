@@ -84,7 +84,15 @@ class Schedule(models.Model):
     def __str__(self):
         return f'{self.doctor_profile} | {self.date} {self.start_time}–{self.end_time}'
 
+    def clean(self):
+        """Валидация: время начала должно быть раньше времени окончания."""
+        from django.core.exceptions import ValidationError
+        if self.start_time and self.end_time and self.start_time >= self.end_time:
+            raise ValidationError({'end_time': 'Время окончания должно быть позже времени начала.'})
+
     def save(self, *args, **kwargs):
+        # Валидация перед сохранением
+        self.full_clean()
         super().save(*args, **kwargs)
         self._generate_slots()
 
