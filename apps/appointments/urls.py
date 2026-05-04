@@ -21,4 +21,11 @@ urlpatterns = [
     path('admin/schedule/',                   views.manage_schedule,        name='manage_schedule'),
     path('admin/rooms/',                      views.manage_rooms,           name='manage_rooms'),
     path('admin/cancel/<int:appointment_id>/',views.admin_cancel_appointment, name='admin_cancel'),
+
+    # ── Сисадмин — управление пользователями ────────────────────────────────
+    path('admin/users/',                       views.user_list,             name='user_list'),
+    path('admin/users/add/',                   views.user_create,           name='user_add'),
+    path('admin/users/<int:user_id>/edit/',    views.user_edit,             name='user_edit'),
+    path('admin/users/<int:user_id>/delete/',  views.user_delete,           name='user_delete'),
+    path('admin/users/<int:user_id>/toggle/',  views.user_toggle_active,    name='user_toggle'),
 ]

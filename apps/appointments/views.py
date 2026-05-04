@@ -6,7 +6,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db import transaction
+from django.db import models, transaction
 from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -432,6 +432,182 @@ def manage_rooms(request):
     rooms = Room.objects.all().order_by('number')
     context = {'rooms': rooms}
     return render(request, 'admin_panel/rooms_manage.html', context)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  СИСАДМИН — управление пользователями
+# ══════════════════════════════════════════════════════════════════════════════
+
+def sysadmin_required(view_func):
+    """Декоратор для проверки прав системного администратора."""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not (request.user.is_authenticated and request.user.is_sysadmin):
+            messages.error(request, 'Доступ только для системного администратора.')
+            return redirect('core:home')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+@login_required
+@sysadmin_required
+def user_list(request):
+    """Список всех пользователей с фильтрацией."""
+    role_filter = request.GET.get('role')
+    search_query = request.GET.get('q')
+
+    users = User.objects.select_related().all()
+
+    if role_filter:
+        users = users.filter(role=role_filter)
+
+    if search_query:
+        users = users.filter(
+            models.Q(username__icontains=search_query) |
+            models.Q(first_name__icontains=search_query) |
+            models.Q(last_name__icontains=search_query) |
+            models.Q(email__icontains=search_query)
+        )
+
+    users = users.order_by('role', 'last_name', 'first_name')
+
+    # Статистика
+    stats = {
+        'total': User.objects.count(),
+        'patients': User.objects.filter(role=User.Role.PATIENT).count(),
+        'doctors': User.objects.filter(role=User.Role.DOCTOR).count(),
+        'admins': User.objects.filter(role=User.Role.ADMIN).count(),
+        'sysadmins': User.objects.filter(role=User.Role.SYSADMIN).count(),
+    }
+
+    context = {
+        'users': users,
+        'stats': stats,
+        'role_filter': role_filter,
+        'search_query': search_query,
+        'roles': User.Role.choices,
+    }
+    return render(request, 'admin_panel/user_list.html', context)
+
+
+@login_required
+@sysadmin_required
+def user_create(request):
+    """Создание нового пользователя."""
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '')
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        role = request.POST.get('role', User.Role.PATIENT)
+        pd_consent = request.POST.get('pd_consent') == 'on'
+
+        # Валидация
+        if not username:
+            messages.error(request, 'Укажите имя пользователя.')
+        elif User.objects.filter(username=username).exists():
+            messages.error(request, 'Пользователь с таким именем уже существует.')
+        elif not email:
+            messages.error(request, 'Укажите email.')
+        elif not password:
+            messages.error(request, 'Укажите пароль.')
+        else:
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                phone=phone,
+                role=role,
+                pd_consent=pd_consent,
+            )
+            messages.success(request, f'Пользователь {user.full_name} создан.')
+            return redirect('appointments:user_list')
+
+    specialties = Specialty.objects.filter(is_active=True) if request.method == 'POST' else []
+    context = {
+        'user_obj': None,
+        'roles': User.Role.choices,
+        'specialties': specialties,
+    }
+    return render(request, 'admin_panel/user_form.html', context)
+
+
+@login_required
+@sysadmin_required
+def user_edit(request, user_id):
+    """Редактирование существующего пользователя."""
+    user_obj = get_object_or_404(User, pk=user_id)
+
+    if request.method == 'POST':
+        user_obj.email = request.POST.get('email', '').strip()
+        user_obj.first_name = request.POST.get('first_name', '').strip()
+        user_obj.last_name = request.POST.get('last_name', '').strip()
+        user_obj.phone = request.POST.get('phone', '').strip()
+        user_obj.role = request.POST.get('role', user_obj.role)
+        user_obj.pd_consent = request.POST.get('pd_consent') == 'on'
+        user_obj.is_active = request.POST.get('is_active') == 'on'
+
+        new_password = request.POST.get('password', '').strip()
+        if new_password:
+            user_obj.set_password(new_password)
+            messages.info(request, 'Пароль изменён.')
+
+        try:
+            user_obj.save()
+            messages.success(request, f'Данные пользователя {user_obj.full_name} обновлены.')
+            return redirect('appointments:user_list')
+        except Exception as e:
+            messages.error(request, f'Ошибка: {e}')
+
+    specialties = Specialty.objects.filter(is_active=True)
+    context = {
+        'user_obj': user_obj,
+        'roles': User.Role.choices,
+        'specialties': specialties,
+    }
+    return render(request, 'admin_panel/user_form.html', context)
+
+
+@login_required
+@sysadmin_required
+@require_POST
+def user_delete(request, user_id):
+    """Удаление пользователя."""
+    user_obj = get_object_or_404(User, pk=user_id)
+
+    # Нельзя удалить себя
+    if user_obj.id == request.user.id:
+        messages.error(request, 'Нельзя удалить свою учётную запись.')
+    else:
+        full_name = user_obj.full_name
+        user_obj.delete()
+        messages.success(request, f'Пользователь {full_name} удалён.')
+
+    return redirect('appointments:user_list')
+
+
+@login_required
+@sysadmin_required
+@require_POST
+def user_toggle_active(request, user_id):
+    """Активация/деактивация пользователя."""
+    user_obj = get_object_or_404(User, pk=user_id)
+
+    # Нельзя деактивировать себя
+    if user_obj.id == request.user.id:
+        messages.error(request, 'Нельзя деактивировать свою учётную запись.')
+        return redirect('appointments:user_list')
+
+    user_obj.is_active = not user_obj.is_active
+    user_obj.save(update_fields=['is_active'])
+
+    status = 'активирован' if user_obj.is_active else 'деактивирован'
+    messages.success(request, f'Пользователь {user_obj.full_name} {status}.')
+    return redirect('appointments:user_list')
 
 
 @login_required

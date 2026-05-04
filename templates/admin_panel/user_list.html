@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% block title %}Управление пользователями — МедЦентр{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4 px-lg-5">
+
+  <!-- ══ Заголовок и навигация ════════════════════════════════════════════════ -->
+  <div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+      <h1 class="page-title mb-1">Управление пользователями</h1>
+      <p class="text-muted mb-0">Все учётные записи системы</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'appointments:admin_dashboard' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Панель
+      </a>
+      <a href="{% url 'appointments:manage_schedule' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-calendar-week me-1"></i>Расписание
+      </a>
+      <a href="{% url 'appointments:manage_rooms' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-door-open me-1"></i>Кабинеты
+      </a>
+      <a href="{% url 'appointments:user_add' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i>Добавить
+      </a>
+    </div>
+  </div>
+
+  <!-- ══ Статистика по ролям ══════════════════════════════════════════════════ -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-2">
+      <div class="stat-card">
+        <div class="sc-value">{{ stats.total }}</div>
+        <div class="sc-label">Всего</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="stat-card stat-card--blue">
+        <div class="sc-value">{{ stats.patients }}</div>
+        <div class="sc-label">Пациенты</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="stat-card stat-card--green">
+        <div class="sc-value">{{ stats.doctors }}</div>
+        <div class="sc-label">Врачи</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="stat-card stat-card--orange">
+        <div class="sc-value">{{ stats.admins }}</div>
+        <div class="sc-label">Админы</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="stat-card stat-card--purple">
+        <div class="sc-value">{{ stats.sysadmins }}</div>
+        <div class="sc-label">Сисадмины</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Фильтры и поиск ════════════════════════════════════════════════════════ -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-3">
+      <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label small text-muted mb-1">Поиск</label>
+          <input type="text" name="q" class="form-control"
+                 placeholder="Имя, фамилия, email, username..."
+                 value="{{ search_query|default:'' }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted mb-1">Роль</label>
+          <select name="role" class="form-select">
+            <option value="">Все роли</option>
+            {% for value, label in roles %}
+              <option value="{{ value }}" {% if role_filter == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-outline-primary w-100">
+            <i class="bi bi-search me-1"></i>Найти
+          </button>
+        </div>
+        {% if search_query or role_filter %}
+        <div class="col-md-2">
+          <a href="{% url 'appointments:user_list' %}" class="btn btn-outline-secondary w-100">
+            <i class="bi bi-x-lg me-1"></i>Сбросить
+          </a>
+        </div>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <!-- ══ Таблица пользователей ════════════════════════════════════════════════ -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      {% if users %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-4">Пользователь</th>
+              <th>Роль</th>
+              <th>Email</th>
+              <th>Телефон</th>
+              <th>Статус</th>
+              <th class="pe-4 text-end">Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr class="{% if not user.is_active %}table-secondary opacity-75{% endif %}">
+              <td class="ps-4">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="avatar avatar--sm bg-{% if user.is_patient %}primary{% elif user.is_doctor %}success{% elif user.is_clinic_admin %}warning{% else %}dark{% endif %}">
+                    {{ user.first_name|default:user.username|slice:":1"|upper }}
+                  </div>
+                  <div>
+                    <div class="fw-600">{{ user.full_name }}</div>
+                    <div class="text-muted small">@{{ user.username }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge bg-{% if user.is_patient %}primary{% elif user.is_doctor %}success{% elif user.is_clinic_admin %}warning{% else %}dark{% endif %}-subtle text-{% if user.is_patient %}primary{% elif user.is_doctor %}success{% elif user.is_clinic_admin %}warning{% else %}dark{% endif %}">
+                  {{ user.get_role_display }}
+                </span>
+              </td>
+              <td>{{ user.email|default:"—" }}</td>
+              <td>{{ user.phone|default:"—" }}</td>
+              <td>
+                {% if user.is_active %}
+                  <span class="badge bg-success-subtle text-success">Активен</span>
+                {% else %}
+                  <span class="badge bg-secondary-subtle text-secondary">Отключён</span>
+                {% endif %}
+              </td>
+              <td class="pe-4 text-end">
+                <div class="d-flex gap-1 justify-content-end">
+                  <a href="{% url 'appointments:user_edit' user.pk %}" class="btn btn-outline-primary btn-sm" title="Редактировать">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  {% if user.pk != request.user.pk %}
+                    <form method="post" action="{% url 'appointments:user_toggle' user.pk %}"
+                          style="display:inline;">
+                      {% csrf_token %}
+                      {% if user.is_active %}
+                        <button type="submit" class="btn btn-outline-warning btn-sm" title="Отключить">
+                          <i class="bi bi-person-dash"></i>
+                        </button>
+                      {% else %}
+                        <button type="submit" class="btn btn-outline-success btn-sm" title="Включить">
+                          <i class="bi bi-person-check"></i>
+                        </button>
+                      {% endif %}
+                    </form>
+                    <form method="post" action="{% url 'appointments:user_delete' user.pk %}"
+                          onsubmit="return confirm('Удалить пользователя {{ user.full_name }}?');"
+                          style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-outline-danger btn-sm" title="Удалить">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  {% else %}
+                    <button class="btn btn-outline-secondary btn-sm" disabled title="Это вы">
+                      <i class="bi bi-person"></i>
+                    </button>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-people fs-1 mb-3 d-block"></i>
+        <p class="mb-0">Пользователи не найдены</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}{{ user_obj|yesno:"Редактирование,Создание" }} пользователя — МедЦентр{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 700px;">
+
+  <!-- ══ Заголовок ════════════════════════════════════════════════════════════ -->
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{% url 'appointments:user_list' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+      <h1 class="page-title mb-0">
+        {% if user_obj %}Редактирование{% else %}Создание{% endif %} пользователя
+      </h1>
+      {% if user_obj %}
+      <p class="text-muted mb-0">{{ user_obj.full_name }} (@{{ user_obj.username }})</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ══ Форма ════════════════════════════════════════════════════════════════ -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Имя пользователя (только при создании) -->
+        {% if not user_obj %}
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Username <span class="text-danger">*</span></label>
+            <input type="text" name="username" class="form-control"
+                   placeholder="ivanov_i" required autofocus>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Персональные данные -->
+        <h6 class="text-muted mb-3 mt-4">Персональные данные</h6>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Имя</label>
+            <input type="text" name="first_name" class="form-control"
+                   value="{{ user_obj.first_name|default:'' }}"
+                   placeholder="Иван">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Фамилия</label>
+            <input type="text" name="last_name" class="form-control"
+                   value="{{ user_obj.last_name|default:'' }}"
+                   placeholder="Иванов">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Email <span class="text-danger">*</span></label>
+          <input type="email" name="email" class="form-control"
+                 value="{{ user_obj.email|default:'' }}"
+                 placeholder="ivanov@example.com" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Телефон</label>
+          <input type="tel" name="phone" class="form-control"
+                 value="{{ user_obj.phone|default:'' }}"
+                 placeholder="+7 (999) 123-45-67">
+        </div>
+
+        <!-- Роль -->
+        <h6 class="text-muted mb-3 mt-4">Доступ и права</h6>
+        <div class="mb-3">
+          <label class="form-label">Роль <span class="text-danger">*</span></label>
+          <select name="role" class="form-select" required>
+            {% for value, label in roles %}
+              <option value="{{ value }}"
+                      {% if user_obj.role == value %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Пароль -->
+        <div class="mb-3">
+          <label class="form-label">
+            {% if user_obj %}Новый пароль{% else %}Пароль <span class="text-danger">*</span>{% endif %}
+          </label>
+          <input type="password" name="password" class="form-control"
+                 placeholder="{% if user_obj %}Оставьте пустым, чтобы не менять{% else %}Минимум 8 символов{% endif %}"
+                 {% if not user_obj %}required{% endif %}>
+          {% if user_obj %}
+          <div class="form-text">Заполните только если хотите изменить пароль</div>
+          {% endif %}
+        </div>
+
+        <!-- Статус активности (только при редактировании) -->
+        {% if user_obj %}
+        <div class="mb-3">
+          <div class="form-check">
+            <input type="checkbox" name="is_active" id="is_active"
+                   class="form-check-input" value="on"
+                   {% if user_obj.is_active %}checked{% endif %}>
+            <label class="form-check-label" for="is_active">
+              Активен
+            </label>
+          </div>
+          <div class="form-text">Неактивные пользователи не могут входить в систему</div>
+        </div>
+        {% endif %}
+
+        <!-- Согласие на обработку ПДн -->
+        <div class="mb-4">
+          <div class="form-check">
+            <input type="checkbox" name="pd_consent" id="pd_consent"
+                   class="form-check-input" value="on"
+                   {% if user_obj.pd_consent %}checked{% endif %}>
+            <label class="form-check-label" for="pd_consent">
+              Согласие на обработку персональных данных (ФЗ-152)
+            </label>
+          </div>
+        </div>
+
+        <!-- Кнопки -->
+        <div class="d-flex gap-3 pt-3 border-top">
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-check-lg me-2"></i>
+            {% if user_obj %}Сохранить{% else %}Создать{% endif %}
+          </button>
+          <a href="{% url 'appointments:user_list' %}" class="btn btn-outline-secondary">
+            Отмена
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
