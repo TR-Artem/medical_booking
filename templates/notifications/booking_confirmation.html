@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject }}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f5f5f5;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background-color: #0d6efd; padding: 30px; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 24px;">МедЦентр</h1>
+                            <p style="color: #ffffff; margin: 10px 0 0; opacity: 0.9;">Онлайн-запись на приём</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 30px;">
+                            <h2 style="color: #333333; margin: 0 0 20px; font-size: 20px;">
+                                Здравствуйте, {{ patient_name }}!
+                            </h2>
+                            
+                            <p style="color: #555555; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
+                                Вы успешно записаны на приём!
+                            </p>
+                            
+                            <!-- Appointment Details -->
+                            <table width="100%" cellpadding="10" cellspacing="0" style="background-color: #f8f9fa; border-radius: 8px; margin: 20px 0;">
+                                <tr>
+                                    <td style="padding: 15px; border-bottom: 1px solid #e9ecef;">
+                                        <strong style="color: #666666;">Врач</strong>
+                                    </td>
+                                    <td style="padding: 15px; border-bottom: 1px solid #e9ecef; color: #333333;">
+                                        {{ doctor_name }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 15px; border-bottom: 1px solid #e9ecef;">
+                                        <strong style="color: #666666;">Специальность</strong>
+                                    </td>
+                                    <td style="padding: 15px; border-bottom: 1px solid #e9ecef; color: #333333;">
+                                        {{ specialty }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 15px; border-bottom: 1px solid #e9ecef;">
+                                        <strong style="color: #666666;">Дата</strong>
+                                    </td>
+                                    <td style="padding: 15px; border-bottom: 1px solid #e9ecef; color: #333333; font-weight: bold; color: #0d6efd;">
+                                        {{ date }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 15px; border-bottom: 1px solid #e9ecef;">
+                                        <strong style="color: #666666;">Время</strong>
+                                    </td>
+                                    <td style="padding: 15px; border-bottom: 1px solid #e9ecef; color: #333333; font-weight: bold;">
+                                        {{ time }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 15px;">
+                                        <strong style="color: #666666;">Кабинет</strong>
+                                    </td>
+                                    <td style="padding: 15px; color: #333333;">
+                                        {{ room }}
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 20px 0;">
+                                Напоминание о визите придёт за 24 часа до назначенного времени.
+                            </p>
+                            
+                            <!-- Button -->
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center" style="padding: 20px 0;">
+                                        <a href="{{ site_url }}/appointments/my/" style="display: inline-block; background-color: #0d6efd; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                                            Мои записи
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="color: #888888; font-size: 13px; line-height: 1.6; margin: 20px 0 0;">
+                                Если вам нужно отменить запись, сделайте это заранее в личном кабинете.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #e9ecef;">
+                            <p style="color: #666666; font-size: 14px; margin: 0 0 10px;">
+                                С уважением,<br>
+                                <strong>Медицинский центр</strong>
+                            </p>
+                            <p style="color: #999999; font-size: 12px; margin: 0;">
+                                Это автоматическое уведомление. Пожалуйста, не отвечайте на это письмо.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
