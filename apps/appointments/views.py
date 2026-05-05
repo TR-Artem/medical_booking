@@ -494,6 +494,8 @@ def user_list(request):
 @sysadmin_required
 def user_create(request):
     """Создание нового пользователя."""
+    specialties = Specialty.objects.filter(is_active=True)
+
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         email = request.POST.get('email', '').strip()
@@ -503,6 +505,7 @@ def user_create(request):
         phone = request.POST.get('phone', '').strip()
         role = request.POST.get('role', User.Role.PATIENT)
         pd_consent = request.POST.get('pd_consent') == 'on'
+        specialty_id = request.POST.get('specialty')
 
         # Валидация
         if not username:
@@ -513,6 +516,8 @@ def user_create(request):
             messages.error(request, 'Укажите email.')
         elif not password:
             messages.error(request, 'Укажите пароль.')
+        elif role == User.Role.DOCTOR and not specialty_id:
+            messages.error(request, 'Для врача укажите специальность.')
         else:
             user = User.objects.create_user(
                 username=username,
@@ -524,10 +529,18 @@ def user_create(request):
                 role=role,
                 pd_consent=pd_consent,
             )
+
+            # Создаём DoctorProfile для врача
+            if role == User.Role.DOCTOR and specialty_id:
+                DoctorProfile.objects.create(
+                    user=user,
+                    specialty_id=specialty_id,
+                    is_active=True,
+                )
+
             messages.success(request, f'Пользователь {user.full_name} создан.')
             return redirect('appointments:user_list')
 
-    specialties = Specialty.objects.filter(is_active=True) if request.method == 'POST' else []
     context = {
         'user_obj': None,
         'roles': User.Role.choices,
@@ -541,15 +554,32 @@ def user_create(request):
 def user_edit(request, user_id):
     """Редактирование существующего пользователя."""
     user_obj = get_object_or_404(User, pk=user_id)
+    specialties = Specialty.objects.filter(is_active=True)
 
     if request.method == 'POST':
         user_obj.email = request.POST.get('email', '').strip()
         user_obj.first_name = request.POST.get('first_name', '').strip()
         user_obj.last_name = request.POST.get('last_name', '').strip()
         user_obj.phone = request.POST.get('phone', '').strip()
-        user_obj.role = request.POST.get('role', user_obj.role)
+        new_role = request.POST.get('role', user_obj.role)
         user_obj.pd_consent = request.POST.get('pd_consent') == 'on'
         user_obj.is_active = request.POST.get('is_active') == 'on'
+
+        # Если меняем роль на врача, нужен DoctorProfile
+        if new_role == User.Role.DOCTOR and not hasattr(user_obj, 'doctor_profile'):
+            specialty_id = request.POST.get('specialty')
+            if specialty_id:
+                DoctorProfile.objects.create(
+                    user=user_obj,
+                    specialty_id=specialty_id,
+                    is_active=True,
+                )
+            else:
+                messages.error(request, 'Для врача укажите специальность.')
+                context = {'user_obj': user_obj, 'roles': User.Role.choices, 'specialties': specialties}
+                return render(request, 'admin_panel/user_form.html', context)
+
+        user_obj.role = new_role
 
         new_password = request.POST.get('password', '').strip()
         if new_password:
@@ -563,7 +593,6 @@ def user_edit(request, user_id):
         except Exception as e:
             messages.error(request, f'Ошибка: {e}')
 
-    specialties = Specialty.objects.filter(is_active=True)
     context = {
         'user_obj': user_obj,
         'roles': User.Role.choices,

@@ -71,11 +71,26 @@
         <h6 class="text-muted mb-3 mt-4">Доступ и права</h6>
         <div class="mb-3">
           <label class="form-label">Роль <span class="text-danger">*</span></label>
-          <select name="role" class="form-select" required>
+          <select name="role" id="roleSelect" class="form-select" required
+                  onchange="toggleSpecialty()">
             {% for value, label in roles %}
               <option value="{{ value }}"
                       {% if user_obj.role == value %}selected{% endif %}>
                 {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Специальность (только для врачей) -->
+        <div class="mb-3" id="specialtyField" style="display: none;">
+          <label class="form-label">Специальность <span class="text-danger">*</span></label>
+          <select name="specialty" id="specialtySelect" class="form-select">
+            <option value="">— Выберите специальность —</option>
+            {% for spec in specialties %}
+              <option value="{{ spec.pk }}"
+                      {% if user_obj.doctor_profile.specialty_id == spec.pk %}selected{% endif %}>
+                {{ spec.name }}
               </option>
             {% endfor %}
           </select>
@@ -137,4 +152,26 @@
   </div>
 
 </div>
+
+<script>
+function toggleSpecialty() {
+    var role = document.getElementById('roleSelect').value;
+    var specialtyField = document.getElementById('specialtyField');
+    var specialtySelect = document.getElementById('specialtySelect');
+
+    if (role === 'doctor') {
+        specialtyField.style.display = 'block';
+        specialtySelect.required = true;
+    } else {
+        specialtyField.style.display = 'none';
+        specialtySelect.required = false;
+        specialtySelect.value = '';
+    }
+}
+
+// Проверить при загрузке страницы (для редактирования)
+document.addEventListener('DOMContentLoaded', function() {
+    toggleSpecialty();
+});
+</script>
 {% endblock %}
