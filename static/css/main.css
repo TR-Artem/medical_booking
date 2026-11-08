@@ -36,7 +36,7 @@ a {
 
 /* ── утилиты, которых нет в Bootstrap ───────────────────────────────────── */
 .py-6 { padding-top: 5rem; padding-bottom: 5rem; }
-.min-vh-75 { min-height: 75vh; }
+.min-vh-75 { min-height: min(75vh, 720px); }
 .fw-600 { font-weight: 600; }
 .fw-700 { font-weight: 700; }
 .ls-1 { letter-spacing: 0.08em; }

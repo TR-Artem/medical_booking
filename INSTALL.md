@@ -11,7 +11,7 @@ make migrate    # применить миграции
 docker compose exec web python manage.py loaddata fixtures/initial_data.json
 ```
 
-Открыть: http://localhost:8000
+Открыть: http://localhost:8080 (через Nginx) или http://localhost:8000 (напрямую)
 
 ## Быстрый старт (Windows)
 

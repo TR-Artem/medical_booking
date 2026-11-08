@@ -6,7 +6,10 @@ setup:
 
 run:
 	$(DEV) up --build -d
-	@echo "Открыть: http://localhost:8000"
+	$(DEV) exec -T web python manage.py migrate --noinput
+	$(DEV) exec -T web python manage.py collectstatic --noinput --clear
+	$(DEV) restart nginx
+	@echo "Открыть: http://localhost:8080"
 
 check:
 	$(PROD) exec -T web sh -c "ruff check . && black --check . && python manage.py test"
