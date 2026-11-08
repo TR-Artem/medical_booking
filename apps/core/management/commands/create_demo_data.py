@@ -57,11 +57,13 @@ class Command(BaseCommand):
         password = options["password"]
         days = options["days"]
 
+        if not Specialty.objects.exists() and not Room.objects.exists():
+            self.stdout.write("Справочники пусты, загружаю fixtures/initial_data.json")
+            call_command("loaddata", "fixtures/initial_data.json", verbosity=0)
+
         specialties = {s.name: s for s in Specialty.objects.all()}
         if not specialties:
-            self.stderr.write(
-                self.style.ERROR("Нет специальностей. Сначала: loaddata initial_data.json")
-            )
+            self.stderr.write(self.style.ERROR("Не удалось загрузить специальности"))
             return
 
         users = {}

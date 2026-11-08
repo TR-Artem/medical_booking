@@ -1,0 +1,8 @@
+Проверка HTTP-маршрутов
+/ -> 200 (0.025407s)
+/accounts/login/ -> 200 (0.008550s)
+/accounts/register/ -> 200 (0.013611s)
+/appointments/doctors/ -> 200 (0.013854s)
+/appointments/my/ -> 302 (0.005391s)
+/appointments/admin/dashboard/ -> 302 (0.002710s)
+/no-such-page/ -> 404 (0.002527s)
