@@ -1,0 +1,11 @@
+body {
+  min-height: 100vh;
+}
+
+.navbar-brand {
+  font-weight: 600;
+}
+
+.card {
+  border-radius: 0.5rem;
+}

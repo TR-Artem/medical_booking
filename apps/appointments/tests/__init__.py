@@ -1,10 +1,13 @@
 """
 Модульные тесты для моделей приложения appointments.
 """
+
+from datetime import date, time, timedelta
+
 from django.test import TestCase
-from datetime import timedelta, time, date
-from apps.accounts.models import User, DoctorProfile
-from apps.appointments.models import Specialty, Room, Schedule, TimeSlot, Appointment
+
+from apps.accounts.models import DoctorProfile, User
+from apps.appointments.models import Appointment, Room, Schedule, Specialty, TimeSlot
 
 
 class SpecialtyModelTest(TestCase):
@@ -13,19 +16,19 @@ class SpecialtyModelTest(TestCase):
     def test_create_specialty(self):
         """Создание специальности."""
         specialty = Specialty.objects.create(
-            name='Кардиология',
-            description='Болезни сердца',
+            name="Кардиология",
+            description="Болезни сердца",
             is_active=True,
         )
-        self.assertEqual(specialty.name, 'Кардиология')
+        self.assertEqual(specialty.name, "Кардиология")
         self.assertTrue(specialty.is_active)
-        self.assertEqual(str(specialty), 'Кардиология')
+        self.assertEqual(str(specialty), "Кардиология")
 
     def test_specialty_unique_name(self):
         """Название специальности должно быть уникальным."""
-        Specialty.objects.create(name='Неврология')
+        Specialty.objects.create(name="Неврология")
         with self.assertRaises(Exception):
-            Specialty.objects.create(name='Неврология')
+            Specialty.objects.create(name="Неврология")
 
 
 class RoomModelTest(TestCase):
@@ -34,20 +37,20 @@ class RoomModelTest(TestCase):
     def test_create_room(self):
         """Создание кабинета."""
         room = Room.objects.create(
-            number='101',
-            name='Кардиология',
+            number="101",
+            name="Кардиология",
             floor=1,
             is_active=True,
         )
-        self.assertEqual(room.number, '101')
+        self.assertEqual(room.number, "101")
         self.assertEqual(room.floor, 1)
         self.assertTrue(room.is_active)
 
     def test_room_unique_number(self):
         """Номер кабинета должен быть уникальным."""
-        Room.objects.create(number='102', name='Терапия')
+        Room.objects.create(number="102", name="Терапия")
         with self.assertRaises(Exception):
-            Room.objects.create(number='102', name='Хирургия')
+            Room.objects.create(number="102", name="Хирургия")
 
 
 class ScheduleModelTest(TestCase):
@@ -55,18 +58,18 @@ class ScheduleModelTest(TestCase):
 
     def setUp(self):
         """Создание данных для тестов."""
-        self.specialty = Specialty.objects.create(name='Терапевт')
+        self.specialty = Specialty.objects.create(name="Терапевт")
         self.user = User.objects.create_user(
-            username='schedule_doctor',
-            email='schedule@test.com',
-            password='testpass123',
+            username="schedule_doctor",
+            email="schedule@test.com",
+            password="testpass123",
             role=User.Role.DOCTOR,
         )
         self.doctor = DoctorProfile.objects.create(
             user=self.user,
             specialty=self.specialty,
         )
-        self.room = Room.objects.create(number='201', name='Терапия')
+        self.room = Room.objects.create(number="201", name="Терапия")
 
     def test_create_schedule(self):
         """Создание расписания."""
@@ -101,18 +104,18 @@ class TimeSlotModelTest(TestCase):
 
     def setUp(self):
         """Создание данных для тестов."""
-        self.specialty = Specialty.objects.create(name='Хирург')
+        self.specialty = Specialty.objects.create(name="Хирург")
         self.user = User.objects.create_user(
-            username='slot_doctor',
-            email='slot@test.com',
-            password='testpass123',
+            username="slot_doctor",
+            email="slot@test.com",
+            password="testpass123",
             role=User.Role.DOCTOR,
         )
         self.doctor = DoctorProfile.objects.create(
             user=self.user,
             specialty=self.specialty,
         )
-        self.room = Room.objects.create(number='301', name='Хирургия')
+        self.room = Room.objects.create(number="301", name="Хирургия")
         # Создаём слот через schedule для генерации
         self.schedule = Schedule.objects.create(
             doctor_profile=self.doctor,
@@ -147,24 +150,24 @@ class AppointmentModelTest(TestCase):
 
     def setUp(self):
         """Создание данных для тестов."""
-        self.specialty = Specialty.objects.create(name='Офтальмолог')
+        self.specialty = Specialty.objects.create(name="Офтальмолог")
         self.doctor_user = User.objects.create_user(
-            username='appt_doctor',
-            email='appt_doctor@test.com',
-            password='testpass123',
+            username="appt_doctor",
+            email="appt_doctor@test.com",
+            password="testpass123",
             role=User.Role.DOCTOR,
         )
         self.patient_user = User.objects.create_user(
-            username='appt_patient',
-            email='appt_patient@test.com',
-            password='testpass123',
+            username="appt_patient",
+            email="appt_patient@test.com",
+            password="testpass123",
             role=User.Role.PATIENT,
         )
         self.doctor = DoctorProfile.objects.create(
             user=self.doctor_user,
             specialty=self.specialty,
         )
-        self.room = Room.objects.create(number='401', name='Офтальмология')
+        self.room = Room.objects.create(number="401", name="Офтальмология")
         # Используем уникальную дату
         self.schedule = Schedule.objects.create(
             doctor_profile=self.doctor,

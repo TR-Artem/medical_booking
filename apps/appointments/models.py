@@ -6,26 +6,29 @@
   TimeSlot   — конкретный временной слот приёма
   Appointment — запись пациента на слот
 """
+
+from datetime import date, datetime, timedelta
+
 from django.db import models
-from django.utils import timezone
-from datetime import timedelta, datetime, date, time
 
 
 class Specialty(models.Model):
     """Справочник специальностей врачей."""
-    name = models.CharField(max_length=100, unique=True, verbose_name='Специальность')
-    description = models.TextField(blank=True, verbose_name='Описание')
+
+    name = models.CharField(max_length=100, unique=True, verbose_name="Специальность")
+    description = models.TextField(blank=True, verbose_name="Описание")
     icon = models.CharField(
-        max_length=50, blank=True,
-        verbose_name='Bootstrap-иконка (bi-...)',
-        help_text='Например: bi-heart-pulse',
+        max_length=50,
+        blank=True,
+        verbose_name="Bootstrap-иконка (bi-...)",
+        help_text="Например: bi-heart-pulse",
     )
-    is_active = models.BooleanField(default=True, verbose_name='Активна')
+    is_active = models.BooleanField(default=True, verbose_name="Активна")
 
     class Meta:
-        verbose_name = 'Специальность'
-        verbose_name_plural = 'Специальности'
-        ordering = ['name']
+        verbose_name = "Специальность"
+        verbose_name_plural = "Специальности"
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
@@ -33,15 +36,16 @@ class Specialty(models.Model):
 
 class Room(models.Model):
     """Кабинет приёма."""
-    number = models.CharField(max_length=10, unique=True, verbose_name='Номер кабинета')
-    name = models.CharField(max_length=100, blank=True, verbose_name='Название / профиль')
-    floor = models.PositiveSmallIntegerField(default=1, verbose_name='Этаж')
-    is_active = models.BooleanField(default=True, verbose_name='Активен')
+
+    number = models.CharField(max_length=10, unique=True, verbose_name="Номер кабинета")
+    name = models.CharField(max_length=100, blank=True, verbose_name="Название / профиль")
+    floor = models.PositiveSmallIntegerField(default=1, verbose_name="Этаж")
+    is_active = models.BooleanField(default=True, verbose_name="Активен")
 
     class Meta:
-        verbose_name = 'Кабинет'
-        verbose_name_plural = 'Кабинеты'
-        ordering = ['number']
+        verbose_name = "Кабинет"
+        verbose_name_plural = "Кабинеты"
+        ordering = ["number"]
 
     def __str__(self):
         return f'Каб. {self.number} — {self.name or "без названия"}'
@@ -53,42 +57,45 @@ class Schedule(models.Model):
     Администратор создаёт запись Schedule, система автоматически
     генерирует TimeSlot-ы при сохранении.
     """
+
     doctor_profile = models.ForeignKey(
-        'accounts.DoctorProfile',
+        "accounts.DoctorProfile",
         on_delete=models.CASCADE,
-        related_name='schedules',
-        verbose_name='Врач',
+        related_name="schedules",
+        verbose_name="Врач",
     )
     room = models.ForeignKey(
         Room,
         on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='schedules',
-        verbose_name='Кабинет',
+        null=True,
+        blank=True,
+        related_name="schedules",
+        verbose_name="Кабинет",
     )
-    date = models.DateField(verbose_name='Дата приёма')
-    start_time = models.TimeField(verbose_name='Начало приёма')
-    end_time = models.TimeField(verbose_name='Конец приёма')
+    date = models.DateField(verbose_name="Дата приёма")
+    start_time = models.TimeField(verbose_name="Начало приёма")
+    end_time = models.TimeField(verbose_name="Конец приёма")
     slot_duration = models.PositiveSmallIntegerField(
         default=30,
-        verbose_name='Длительность слота (мин)',
+        verbose_name="Длительность слота (мин)",
     )
 
     class Meta:
-        verbose_name = 'Расписание'
-        verbose_name_plural = 'Расписания'
-        ordering = ['date', 'start_time']
+        verbose_name = "Расписание"
+        verbose_name_plural = "Расписания"
+        ordering = ["date", "start_time"]
         # Один врач не может вести приём в двух кабинетах одновременно
-        unique_together = [('doctor_profile', 'date')]
+        unique_together = [("doctor_profile", "date")]
 
     def __str__(self):
-        return f'{self.doctor_profile} | {self.date} {self.start_time}–{self.end_time}'
+        return f"{self.doctor_profile} | {self.date} {self.start_time}–{self.end_time}"
 
     def clean(self):
         """Валидация: время начала должно быть раньше времени окончания."""
         from django.core.exceptions import ValidationError
+
         if self.start_time and self.end_time and self.start_time >= self.end_time:
-            raise ValidationError({'end_time': 'Время окончания должно быть позже времени начала.'})
+            raise ValidationError({"end_time": "Время окончания должно быть позже времени начала."})
 
     def save(self, *args, **kwargs):
         # Валидация перед сохранением
@@ -108,14 +115,17 @@ class Schedule(models.Model):
 
         if isinstance(slot_date, str):
             from datetime import date as date_type
+
             slot_date = date_type.fromisoformat(slot_date)
         if isinstance(slot_start, str):
             from datetime import time as time_type
-            h, m = slot_start.split(':')[:2]
+
+            h, m = slot_start.split(":")[:2]
             slot_start = time_type(int(h), int(m))
         if isinstance(slot_end, str):
             from datetime import time as time_type
-            h, m = slot_end.split(':')[:2]
+
+            h, m = slot_end.split(":")[:2]
             slot_end = time_type(int(h), int(m))
 
         start = datetime.combine(slot_date, slot_start)
@@ -144,40 +154,44 @@ class Schedule(models.Model):
 
 class TimeSlot(models.Model):
     """Конкретный временной слот для записи к врачу."""
+
     schedule = models.ForeignKey(
         Schedule,
         on_delete=models.CASCADE,
-        related_name='slots',
-        verbose_name='Расписание',
+        related_name="slots",
+        verbose_name="Расписание",
     )
     doctor_profile = models.ForeignKey(
-        'accounts.DoctorProfile',
+        "accounts.DoctorProfile",
         on_delete=models.CASCADE,
-        related_name='slots',
-        verbose_name='Врач',
+        related_name="slots",
+        verbose_name="Врач",
     )
-    date = models.DateField(verbose_name='Дата')
-    start_time = models.TimeField(verbose_name='Начало')
-    end_time = models.TimeField(verbose_name='Конец')
+    date = models.DateField(verbose_name="Дата")
+    start_time = models.TimeField(verbose_name="Начало")
+    end_time = models.TimeField(verbose_name="Конец")
     room = models.ForeignKey(
         Room,
         on_delete=models.SET_NULL,
-        null=True, blank=True,
-        verbose_name='Кабинет',
+        null=True,
+        blank=True,
+        verbose_name="Кабинет",
     )
-    is_booked = models.BooleanField(default=False, verbose_name='Занят')
+    is_booked = models.BooleanField(default=False, verbose_name="Занят")
     # Врач может заблокировать слот (отпуск, учёба)
-    is_blocked = models.BooleanField(default=False, verbose_name='Заблокирован врачом')
+    is_blocked = models.BooleanField(default=False, verbose_name="Заблокирован врачом")
 
     class Meta:
-        verbose_name = 'Временной слот'
-        verbose_name_plural = 'Временные слоты'
-        ordering = ['date', 'start_time']
+        verbose_name = "Временной слот"
+        verbose_name_plural = "Временные слоты"
+        ordering = ["date", "start_time"]
         # Гарантия уникальности: один слот — один врач — одно время
-        unique_together = [('doctor_profile', 'date', 'start_time')]
+        unique_together = [("doctor_profile", "date", "start_time")]
 
     def __str__(self):
-        return f'{self.doctor_profile.user.full_name} | {self.date} {self.start_time}–{self.end_time}'
+        return (
+            f"{self.doctor_profile.user.full_name} | {self.date} {self.start_time}–{self.end_time}"
+        )
 
     @property
     def is_available(self):
@@ -192,62 +206,62 @@ class Appointment(models.Model):
     """Запись пациента на приём."""
 
     class Status(models.TextChoices):
-        BOOKED    = 'booked',    'Забронировано'
-        CONFIRMED = 'confirmed', 'Подтверждено'
-        CANCELLED = 'cancelled', 'Отменено'
-        COMPLETED = 'completed', 'Завершено (пациент явился)'
-        NO_SHOW   = 'no_show',   'Неявка'
+        BOOKED = "booked", "Забронировано"
+        CONFIRMED = "confirmed", "Подтверждено"
+        CANCELLED = "cancelled", "Отменено"
+        COMPLETED = "completed", "Завершено (пациент явился)"
+        NO_SHOW = "no_show", "Неявка"
 
     patient = models.ForeignKey(
-        'accounts.User',
+        "accounts.User",
         on_delete=models.CASCADE,
-        related_name='appointments',
-        verbose_name='Пациент',
-        limit_choices_to={'role': 'patient'},
+        related_name="appointments",
+        verbose_name="Пациент",
+        limit_choices_to={"role": "patient"},
     )
     slot = models.OneToOneField(
         TimeSlot,
         on_delete=models.CASCADE,
-        related_name='appointment',
-        verbose_name='Временной слот',
+        related_name="appointment",
+        verbose_name="Временной слот",
     )
     status = models.CharField(
         max_length=10,
         choices=Status.choices,
         default=Status.BOOKED,
-        verbose_name='Статус',
+        verbose_name="Статус",
     )
-    complaint = models.TextField(blank=True, verbose_name='Жалоба / причина визита')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создано')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Обновлено')
+    complaint = models.TextField(blank=True, verbose_name="Жалоба / причина визита")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлено")
     # Флаг: напоминание за 24 ч. отправлено
     reminder_sent = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = 'Запись'
-        verbose_name_plural = 'Записи'
-        ordering = ['-created_at']
+        verbose_name = "Запись"
+        verbose_name_plural = "Записи"
+        ordering = ["-created_at"]
 
     def __str__(self):
         return (
-            f'{self.patient.full_name} → '
-            f'{self.slot.doctor_profile.user.full_name} | '
-            f'{self.slot.date} {self.slot.start_time} [{self.get_status_display()}]'
+            f"{self.patient.full_name} → "
+            f"{self.slot.doctor_profile.user.full_name} | "
+            f"{self.slot.date} {self.slot.start_time} [{self.get_status_display()}]"
         )
 
     def cancel(self):
         """Отменить запись и освободить слот."""
         self.status = self.Status.CANCELLED
         self.slot.is_booked = False
-        self.slot.save(update_fields=['is_booked'])
-        self.save(update_fields=['status', 'updated_at'])
+        self.slot.save(update_fields=["is_booked"])
+        self.save(update_fields=["status", "updated_at"])
 
     def mark_attended(self):
         """Отметить явку пациента."""
         self.status = self.Status.COMPLETED
-        self.save(update_fields=['status', 'updated_at'])
+        self.save(update_fields=["status", "updated_at"])
 
     def mark_no_show(self):
         """Отметить неявку пациента."""
         self.status = self.Status.NO_SHOW
-        self.save(update_fields=['status', 'updated_at'])
+        self.save(update_fields=["status", "updated_at"])
