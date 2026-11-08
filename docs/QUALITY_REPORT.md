@@ -39,7 +39,7 @@ Chrome DevTools (Console, Network), Lighthouse 12, curl, Django test client, `py
 
 ## 5. Дефекты
 
-Найдено 13, исправлено 11. Подробно — в `docs/DEFECT_LOG.md`.
+Найдено 15, исправлено 13. Подробно — в `docs/DEFECT_LOG.md`.
 
 Ключевые:
 
@@ -49,6 +49,8 @@ Chrome DevTools (Console, Network), Lighthouse 12, curl, Django test client, `py
 - BUG-07: отсутствовало meta description — исправлено, SEO 100.
 - BUG-09: 502 после пересоздания `web` — исправлено перезапуском nginx в деплое.
 - BUG-10: dev и prod делили том БД — исправлено разделением проектов.
+- BUG-14: кнопки без доступного имени — добавлены `aria-label`.
+- BUG-15: отсутствовал favicon, консоль показывала 404 — добавлен файл и `<link rel="icon">`.
 
 Открыты: BUG-12 (302 вместо 403 на закрытых разделах) и BUG-13 (нет HTTPS) — внесены в реестр рисков.
 

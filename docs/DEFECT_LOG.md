@@ -15,12 +15,14 @@
 | BUG-09 | Развёртывание | 502 после пересоздания `web` | Пересоздать контейнер web | Высокая | fixed | `restart nginx` в `make deploy` |
 | BUG-10 | Инфраструктура | Dev и prod делили том PostgreSQL, `down -v` мог удалить данные | Запустить `make check` при поднятом prod | Высокая | fixed | Разные имена проектов и томов |
 | BUG-11 | Демо | Учётки из README не существовали | Открыть страницу входа | Средняя | fixed | Команда `create_demo_data` |
+| BUG-14 | Доступность | У кнопок нет доступного имени (меню, показ пароля, закрытие сообщения) | Lighthouse: button-name | Средняя | fixed | Добавлены `aria-label` |
+| BUG-15 | UI | `favicon.ico` отсутствует, ошибка 404 в консоли | Lighthouse: errors-in-console | Низкая | fixed | Добавлен `static/img/favicon.svg` и `<link rel="icon">` |
 | BUG-12 | Доступ | Закрытые разделы отдают 302 на главную, а не 403 | Пациентом открыть `/appointments/admin/dashboard/` | Низкая | open | Запланировать 403 с отдельной страницей (этап 6) |
 | BUG-13 | Безопасность | Демо-стенд работает по HTTP без TLS | Открыть `http://localhost` | Средняя | open | HTTPS/reverse-proxy с сертификатом — этап 5 |
 
 ## Как проверялись исправления
 
-- BUG-05..07: Lighthouse до и после. До: accessibility 88, best-practices 100, SEO 75. После: 100/100/100 (`reports/lighthouse_report.html`).
+- BUG-05..07, BUG-14, BUG-15: Lighthouse до и после. До: accessibility 88, best-practices 100, SEO 75. После: 100/100/100 в браузерном аудиторе и в Lighthouse 12 CLI (`reports/lighthouse_report.html`).
 - BUG-01: `docker compose ps` — celery и celery-beat в статусе `running`.
 - BUG-08..09: повторный `make deploy`, страница отдаёт новый хеш CSS, ответ 200.
 - BUG-10: `docker compose -f docker-compose.prod.yml ps` и `docker compose -f docker-compose.yml ps` — независимые проекты.

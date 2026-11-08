@@ -31,7 +31,7 @@
 2. `heading-order` — заголовки карточек были `h5` после `h2`, в подвале `h6`. Заменены на `h3` и `h4.h6`.
 3. `meta-description` — добавлено описание страницы.
 
-Отчёт: `reports/lighthouse_report.html`.
+Отчёт: `reports/lighthouse_report.html` (Lighthouse 12 CLI). Дополнительно проверено в браузерном аудиторе: 100/100/100.
 
 ## Тесты
 

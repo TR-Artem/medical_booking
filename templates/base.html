@@ -1,9 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Онлайн-запись пациентов в медицинский центр: выбор врача и специальности, свободные слоты, подтверждение и напоминания на e-mail.">
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
   <title>{% block title %}МедЦентр — Онлайн-запись{% endblock %}</title>
 
   <!-- Bootstrap 5 -->
@@ -29,7 +31,7 @@
       <span class="brand-text">МедЦентр</span>
     </a>
 
-    <button class="navbar-toggler border-0" type="button"
+    <button class="navbar-toggler border-0" type="button" aria-label="Открыть меню"
             data-bs-toggle="collapse" data-bs-target="#navMenu">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -105,7 +107,7 @@
          role="alert">
       <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}exclamation-triangle{% elif message.tags == 'warning' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
       {{ message }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
     </div>
   {% endfor %}
 </div>
