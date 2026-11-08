@@ -29,9 +29,7 @@ class RoleAccessTest(TestCase):
         self.sysadmin = User.objects.create_user(
             username="sysadmin_acl", password="password123", role=User.Role.SYSADMIN
         )
-        self.doctor = DoctorProfile.objects.create(
-            user=self.doctor_user, specialty=self.specialty
-        )
+        self.doctor = DoctorProfile.objects.create(user=self.doctor_user, specialty=self.specialty)
         self.schedule = Schedule.objects.create(
             doctor_profile=self.doctor,
             room=self.room,
