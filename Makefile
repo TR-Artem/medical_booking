@@ -74,7 +74,7 @@ performance:
 
 logs-check:
 	@mkdir -p reports
-	$(PROD) logs --no-color --tail=100 > reports/logs_tail.txt
+	$(PROD) logs --no-color --tail=100 web celery celery-beat nginx > reports/logs_tail.txt
 	@grep -Eci "traceback|error|critical|fatal" reports/logs_tail.txt || echo "критических ошибок не найдено"
 
 clean:
