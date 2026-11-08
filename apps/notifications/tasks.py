@@ -2,11 +2,14 @@
 Celery-задачи модуля уведомлений.
 Запускаются по расписанию через django-celery-beat.
 """
+
+from datetime import datetime, timedelta
+
 from celery import shared_task
 from django.utils import timezone
-from datetime import timedelta, datetime
 
 from apps.appointments.models import Appointment
+
 from .services import send_reminder
 
 
@@ -20,22 +23,20 @@ def send_appointment_reminders():
     now = timezone.now()
     # Окно: визит от 23 до 25 часов с текущего момента
     window_start = now + timedelta(hours=23)
-    window_end   = now + timedelta(hours=25)
+    window_end = now + timedelta(hours=25)
 
     appointments = Appointment.objects.filter(
         status=Appointment.Status.BOOKED,
         reminder_sent=False,
         slot__date=window_start.date(),
-    ).select_related('patient', 'slot__doctor_profile__user', 'slot__room')
+    ).select_related("patient", "slot__doctor_profile__user", "slot__room")
 
     sent = 0
     for appt in appointments:
         # Дополнительная проверка по времени
-        appt_dt = timezone.make_aware(
-            datetime.combine(appt.slot.date, appt.slot.start_time)
-        )
+        appt_dt = timezone.make_aware(datetime.combine(appt.slot.date, appt.slot.start_time))
         if window_start <= appt_dt <= window_end:
             send_reminder(appt)
             sent += 1
 
-    return f'Отправлено напоминаний: {sent}'
+    return f"Отправлено напоминаний: {sent}"
