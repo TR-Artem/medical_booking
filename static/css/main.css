@@ -941,12 +941,12 @@ a {
 }
 
 /* Поля форм, которые Django рендерит без класса form-control */
-.card-body form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]),
-.card-body form textarea,
-.card-body form select,
-.auth-card form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]),
-.auth-card form textarea,
-.auth-card form select {
+.card-body form input:not([class]):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]),
+.card-body form textarea:not([class]),
+.card-body form select:not([class]),
+.auth-card form input:not([class]):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]),
+.auth-card form textarea:not([class]),
+.auth-card form select:not([class]) {
   display: block;
   width: 100%;
   padding: 0.6rem 0.9rem;
@@ -958,12 +958,12 @@ a {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.card-body form input:focus,
-.card-body form textarea:focus,
-.card-body form select:focus,
-.auth-card form input:focus,
-.auth-card form textarea:focus,
-.auth-card form select:focus {
+.card-body form input:not([class]):focus,
+.card-body form textarea:not([class]):focus,
+.card-body form select:not([class]):focus,
+.auth-card form input:not([class]):focus,
+.auth-card form textarea:not([class]):focus,
+.auth-card form select:not([class]):focus {
   outline: 0;
   border-color: var(--mc-primary);
   box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
