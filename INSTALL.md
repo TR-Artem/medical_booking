@@ -1,5 +1,7 @@
 # Установка и запуск
 
+> Репозиторий проекта: https://github.com/TR-Artem/medical_booking
+
 Требования: Docker Desktop (или OrbStack) с Docker Compose v2.
 
 ## Быстрый старт (macOS / Linux)

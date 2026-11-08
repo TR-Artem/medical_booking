@@ -1,0 +1,129 @@
+celery-1  |  
+celery-1  |  -------------- celery@2c4a4fd9172d v5.3.6 (emerald-rush)
+celery-1  | --- ***** ----- 
+celery-1  | -- ******* ---- Linux-7.2.12-orbstack-00394-gbecdd6130068-aarch64-with-glibc2.41 2026-11-08 22:34:54
+celery-1  | - *** --- * --- 
+nginx-1   | 10-listen-on-ipv6-by-default.sh: info: can not modify /etc/nginx/conf.d/default.conf (read-only file system?)
+nginx-1   | /docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+nginx-1   | /docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+nginx-1   | /docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+nginx-1   | /docker-entrypoint.sh: Configuration complete; ready for start up
+celery-1  | - ** ---------- [config]
+celery-1  | - ** ---------- .> app:         medical_booking:0xffff8b59aa50
+celery-1  | - ** ---------- .> transport:   redis://:**@redis:6379/0
+celery-1  | - ** ---------- .> results:     redis://redis:6379/0
+celery-1  | - *** --- * --- .> concurrency: 10 (prefork)
+celery-1  | -- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+celery-1  | --- ***** ----- 
+celery-1  |  -------------- [queues]
+celery-1  |                 .> celery           exchange=celery(direct) key=celery
+celery-1  |                 
+celery-1  | 
+celery-1  | [tasks]
+celery-1  |   . apps.notifications.tasks.send_appointment_reminders
+celery-1  | 
+celery-1  | [2026-11-08 22:34:55,177: INFO/MainProcess] Connected to redis://:**@redis:6379/0
+celery-1  | [2026-11-08 22:34:55,178: INFO/MainProcess] mingle: searching for neighbors
+web-1     | [2026-11-08 19:39:52 +0000] [1] [INFO] Starting gunicorn 22.0.0
+celery-1  | [2026-11-08 22:34:56,189: INFO/MainProcess] mingle: all alone
+celery-1  | [2026-11-08 22:34:56,202: INFO/MainProcess] celery@2c4a4fd9172d ready.
+web-1     | [2026-11-08 19:39:52 +0000] [1] [INFO] Listening at: http://0.0.0.0:8000 (1)
+web-1     | [2026-11-08 19:39:52 +0000] [1] [INFO] Using worker: sync
+nginx-1   | 2026/11/08 19:37:52 [notice] 1#1: using the "epoll" event method
+nginx-1   | 2026/11/08 19:37:52 [notice] 1#1: nginx/1.31.8
+nginx-1   | 2026/11/08 19:37:52 [notice] 1#1: built by gcc 15.2.0 (Alpine 15.2.0) 
+web-1     | [2026-11-08 19:39:52 +0000] [6] [INFO] Booting worker with pid: 6
+web-1     | [2026-11-08 19:39:52 +0000] [7] [INFO] Booting worker with pid: 7
+web-1     | [2026-11-08 19:39:52 +0000] [8] [INFO] Booting worker with pid: 8
+nginx-1   | 2026/11/08 19:37:52 [notice] 1#1: OS: Linux 7.2.12-orbstack-00394-gbecdd6130068
+nginx-1   | 2026/11/08 19:37:52 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 20480:1048576
+nginx-1   | 2026/11/08 19:37:52 [notice] 1#1: start worker processes
+nginx-1   | 2026/11/08 19:37:52 [notice] 1#1: start worker process 20
+nginx-1   | 2026/11/08 19:37:52 [notice] 1#1: start worker process 21
+nginx-1   | 2026/11/08 19:37:52 [notice] 1#1: start worker process 22
+nginx-1   | 2026/11/08 19:37:52 [notice] 1#1: start worker process 23
+nginx-1   | 2026/11/08 19:37:52 [notice] 1#1: start worker process 24
+nginx-1   | 2026/11/08 19:37:52 [notice] 1#1: start worker process 25
+nginx-1   | 2026/11/08 19:37:52 [notice] 1#1: start worker process 26
+nginx-1   | 2026/11/08 19:37:52 [notice] 1#1: start worker process 27
+nginx-1   | 2026/11/08 19:37:52 [notice] 1#1: start worker process 28
+nginx-1   | 2026/11/08 19:37:52 [notice] 1#1: start worker process 29
+nginx-1   | 192.168.117.1 - - [08/Nov/2026:19:37:57 +0000] "GET / HTTP/1.1" 200 17581 "-" "curl/8.7.1" "-"
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+nginx-1   | 2026/11/08 19:40:12 [notice] 21#21: gracefully shutting down
+nginx-1   | 2026/11/08 19:40:12 [notice] 20#20: gracefully shutting down
+nginx-1   | 2026/11/08 19:40:12 [notice] 20#20: exiting
+nginx-1   | 2026/11/08 19:40:12 [notice] 22#22: gracefully shutting down
+nginx-1   | 2026/11/08 19:40:12 [notice] 22#22: exiting
+nginx-1   | 2026/11/08 19:40:12 [notice] 21#21: exiting
+nginx-1   | 2026/11/08 19:40:12 [notice] 20#20: exit
+nginx-1   | 2026/11/08 19:40:12 [notice] 23#23: gracefully shutting down
+nginx-1   | 2026/11/08 19:40:12 [notice] 28#28: gracefully shutting down
+nginx-1   | 2026/11/08 19:40:12 [notice] 27#27: gracefully shutting down
+nginx-1   | 2026/11/08 19:40:12 [notice] 24#24: gracefully shutting down
+nginx-1   | 2026/11/08 19:40:12 [notice] 25#25: gracefully shutting down
+nginx-1   | 2026/11/08 19:40:12 [notice] 28#28: exiting
+nginx-1   | 2026/11/08 19:40:12 [notice] 27#27: exiting
+nginx-1   | 2026/11/08 19:40:12 [notice] 22#22: exit
+nginx-1   | 2026/11/08 19:40:12 [notice] 23#23: exiting
+nginx-1   | 2026/11/08 19:40:12 [notice] 21#21: exit
+nginx-1   | 2026/11/08 19:40:12 [notice] 24#24: exiting
+nginx-1   | 2026/11/08 19:40:12 [notice] 25#25: exiting
+nginx-1   | 2026/11/08 19:40:12 [notice] 28#28: exit
+nginx-1   | 2026/11/08 19:40:12 [notice] 27#27: exit
+nginx-1   | 2026/11/08 19:40:12 [notice] 23#23: exit
+nginx-1   | 2026/11/08 19:40:12 [notice] 25#25: exit
+nginx-1   | 2026/11/08 19:40:12 [notice] 24#24: exit
+nginx-1   | 2026/11/08 19:40:12 [notice] 26#26: gracefully shutting down
+nginx-1   | 2026/11/08 19:40:12 [notice] 26#26: exiting
+nginx-1   | 2026/11/08 19:40:12 [notice] 29#29: gracefully shutting down
+nginx-1   | 2026/11/08 19:40:12 [notice] 29#29: exiting
+nginx-1   | 2026/11/08 19:40:12 [notice] 26#26: exit
+nginx-1   | 2026/11/08 19:40:12 [notice] 29#29: exit
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: signal 17 (SIGCHLD) received from 21
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: worker process 21 exited with code 0
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: signal 29 (SIGIO) received
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: worker process 25 exited with code 0
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: worker process 28 exited with code 0
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: signal 29 (SIGIO) received
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: signal 17 (SIGCHLD) received from 29
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: worker process 24 exited with code 0
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: worker process 29 exited with code 0
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: signal 29 (SIGIO) received
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: signal 17 (SIGCHLD) received from 26
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: worker process 26 exited with code 0
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: signal 29 (SIGIO) received
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: signal 17 (SIGCHLD) received from 23
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: worker process 22 exited with code 0
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: worker process 23 exited with code 0
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: worker process 27 exited with code 0
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: signal 17 (SIGCHLD) received from 20
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: worker process 20 exited with code 0
+nginx-1   | 2026/11/08 19:40:12 [notice] 1#1: exit
+nginx-1   | /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+nginx-1   | /docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+nginx-1   | /docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+nginx-1   | 10-listen-on-ipv6-by-default.sh: info: can not modify /etc/nginx/conf.d/default.conf (read-only file system?)
+nginx-1   | /docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+nginx-1   | /docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+nginx-1   | /docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+nginx-1   | /docker-entrypoint.sh: Configuration complete; ready for start up
+nginx-1   | 2026/11/08 19:40:13 [notice] 1#1: using the "epoll" event method
+nginx-1   | 2026/11/08 19:40:13 [notice] 1#1: nginx/1.31.8
+nginx-1   | 2026/11/08 19:40:13 [notice] 1#1: built by gcc 15.2.0 (Alpine 15.2.0) 
+nginx-1   | 2026/11/08 19:40:13 [notice] 1#1: OS: Linux 7.2.12-orbstack-00394-gbecdd6130068
+nginx-1   | 2026/11/08 19:40:13 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 20480:1048576
+nginx-1   | 2026/11/08 19:40:13 [notice] 1#1: start worker processes
+nginx-1   | 2026/11/08 19:40:13 [notice] 1#1: start worker process 20
+nginx-1   | 2026/11/08 19:40:13 [notice] 1#1: start worker process 21
+nginx-1   | 2026/11/08 19:40:13 [notice] 1#1: start worker process 22
+nginx-1   | 2026/11/08 19:40:13 [notice] 1#1: start worker process 23
+nginx-1   | 2026/11/08 19:40:13 [notice] 1#1: start worker process 24
+nginx-1   | 2026/11/08 19:40:13 [notice] 1#1: start worker process 25
+nginx-1   | 2026/11/08 19:40:13 [notice] 1#1: start worker process 26
+nginx-1   | 2026/11/08 19:40:13 [notice] 1#1: start worker process 27
+nginx-1   | 2026/11/08 19:40:13 [notice] 1#1: start worker process 28
+nginx-1   | 2026/11/08 19:40:13 [notice] 1#1: start worker process 29
+nginx-1   | 192.168.117.1 - - [08/Nov/2026:19:40:18 +0000] "GET / HTTP/1.1" 200 17542 "-" "curl/8.7.1" "-"
+nginx-1   | 192.168.117.1 - - [08/Nov/2026:19:41:26 +0000] "HEAD / HTTP/1.1" 200 0 "-" "curl/8.7.1" "-"

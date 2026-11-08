@@ -26,6 +26,11 @@ from apps.notifications.services import (
 from .models import Appointment, Room, Schedule, Specialty, TimeSlot
 
 
+def access_denied(request, text):
+    """Отдаёт 403 с понятным сообщением вместо редиректа (BUG-12)."""
+    return render(request, "403.html", {"message": text}, status=403)
+
+
 def admin_required(view_func):
     """Декоратор для проверки прав администратора клиники."""
 
@@ -35,8 +40,7 @@ def admin_required(view_func):
             request.user.is_authenticated
             and (request.user.is_clinic_admin or request.user.is_sysadmin)
         ):
-            messages.error(request, "Доступ только для администраторов клиники.")
-            return redirect("core:home")
+            return access_denied(request, "Доступ только для администраторов клиники.")
         return view_func(request, *args, **kwargs)
 
     return wrapper
@@ -48,8 +52,7 @@ def doctor_required(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated or not request.user.is_doctor:
-            messages.error(request, "Доступ только для врачей.")
-            return redirect("core:home")
+            return access_denied(request, "Доступ только для врачей.")
         return view_func(request, *args, **kwargs)
 
     return wrapper
@@ -223,8 +226,7 @@ def cancel_appointment(request, appointment_id):
 def doctor_dashboard(request):
     """Личный кабинет врача — расписание на текущую дату и ближайшие дни."""
     if not request.user.is_doctor:
-        messages.error(request, "Доступ только для врачей.")
-        return redirect("core:home")
+        return access_denied(request, "Доступ только для врачей.")
 
     doctor_profile = get_object_or_404(DoctorProfile, user=request.user)
     today = timezone.now().date()
@@ -457,8 +459,7 @@ def sysadmin_required(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not (request.user.is_authenticated and request.user.is_sysadmin):
-            messages.error(request, "Доступ только для системного администратора.")
-            return redirect("core:home")
+            return access_denied(request, "Доступ только для системного администратора.")
         return view_func(request, *args, **kwargs)
 
     return wrapper

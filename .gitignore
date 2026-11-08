@@ -33,3 +33,11 @@ media/
 .vscode/
 *.iml
 
+
+backups/
+*.sql
+*.dump
+*.gz
+dumps/
+
+release/
