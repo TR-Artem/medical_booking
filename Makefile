@@ -33,7 +33,9 @@ deploy:
 	@test -f .env.production || (echo "Создайте .env.production из .env.production.example" && exit 1)
 	$(PROD) up --build -d
 	$(PROD) exec -T web python manage.py migrate --noinput
-	$(PROD) exec -T web python manage.py collectstatic --noinput
+	$(PROD) exec -T web python manage.py collectstatic --noinput --clear
+	$(PROD) restart web
+	$(PROD) restart nginx
 	$(PROD) ps
 
 restart:
