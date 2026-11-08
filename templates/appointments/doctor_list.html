@@ -40,7 +40,7 @@
         </div>
         <div class="dc-body">
           <div class="dc-specialty">{{ dp.specialty.name }}</div>
-          <h5 class="dc-name">{{ dp.user.full_name }}</h5>
+          <h3 class="dc-name">{{ dp.user.full_name }}</h3>
           {% if dp.experience_years %}
           <p class="text-muted small">
             <i class="bi bi-award me-1 text-primary"></i>Стаж {{ dp.experience_years }} лет
@@ -62,7 +62,7 @@
   {% else %}
   <div class="text-center py-5 text-muted">
     <i class="bi bi-person-x fs-1 mb-3 d-block opacity-50"></i>
-    <h5>Врачи не найдены</h5>
+    <h5>Врачи не найдены</h3>
     <p>Попробуйте выбрать другую специальность</p>
     <a href="{% url 'appointments:doctor_list' %}" class="btn btn-outline-primary btn-sm">
       Сбросить фильтр

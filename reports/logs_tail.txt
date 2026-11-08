@@ -1,0 +1,88 @@
+web-1  | [2026-11-08 18:31:24 +0000] [1] [INFO] Starting gunicorn 22.0.0
+web-1  | [2026-11-08 18:31:24 +0000] [1] [INFO] Listening at: http://0.0.0.0:8000 (1)
+web-1  | [2026-11-08 18:31:24 +0000] [1] [INFO] Using worker: sync
+web-1  | [2026-11-08 18:31:24 +0000] [6] [INFO] Booting worker with pid: 6
+web-1  | [2026-11-08 18:31:24 +0000] [7] [INFO] Booting worker with pid: 7
+web-1  | [2026-11-08 18:31:24 +0000] [8] [INFO] Booting worker with pid: 8
+celery-beat-1  | [2026-11-08 21:31:24,426: INFO/MainProcess] beat: Starting...
+redis-1        | 1:C 08 Nov 2026 18:31:18.419 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+redis-1        | 1:C 08 Nov 2026 18:31:18.419 * Redis version=7.4.12, bits=64, commit=00000000, modified=0, pid=1, just started
+redis-1        | 1:C 08 Nov 2026 18:31:18.419 # Warning: no config file specified, using the default config. In order to specify a config file use redis-server /path/to/redis.conf
+redis-1        | 1:M 08 Nov 2026 18:31:18.419 * monotonic clock: POSIX clock_gettime
+redis-1        | 1:M 08 Nov 2026 18:31:18.420 * Running mode=standalone, port=6379.
+celery-1       | /usr/local/lib/python3.12/site-packages/celery/platforms.py:829: SecurityWarning: You're running the worker with superuser privileges: this is
+celery-1       | absolutely not recommended!
+celery-1       | 
+celery-1       | Please specify a different user using the --uid option.
+celery-1       | 
+celery-1       | User information: uid=0 euid=0 gid=0 egid=0
+celery-1       | 
+celery-1       |   warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+celery-1       |  
+celery-1       |  -------------- celery@c803a81fa1f7 v5.3.6 (emerald-rush)
+celery-1       | --- ***** ----- 
+celery-1       | -- ******* ---- Linux-7.2.12-orbstack-00394-gbecdd6130068-aarch64-with-glibc2.41 2026-11-08 21:31:24
+celery-1       | - *** --- * --- 
+redis-1        | 1:M 08 Nov 2026 18:31:18.420 * Server initialized
+redis-1        | 1:M 08 Nov 2026 18:31:18.420 * Loading RDB produced by version 7.4.12
+redis-1        | 1:M 08 Nov 2026 18:31:18.420 * RDB age 3 seconds
+redis-1        | 1:M 08 Nov 2026 18:31:18.420 * RDB memory usage when created 1.51 Mb
+redis-1        | 1:M 08 Nov 2026 18:31:18.420 * Done loading RDB, keys loaded: 5, keys expired: 0.
+redis-1        | 1:M 08 Nov 2026 18:31:18.420 * DB loaded from disk: 0.000 seconds
+redis-1        | 1:M 08 Nov 2026 18:31:18.420 * Ready to accept connections tcp
+celery-1       | - ** ---------- [config]
+celery-1       | - ** ---------- .> app:         medical_booking:0xffffafaeab70
+celery-1       | - ** ---------- .> transport:   redis://:**@redis:6379/0
+celery-1       | - ** ---------- .> results:     redis://redis:6379/0
+celery-1       | - *** --- * --- .> concurrency: 10 (prefork)
+celery-1       | -- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+celery-1       | --- ***** ----- 
+celery-1       |  -------------- [queues]
+celery-1       |                 .> celery           exchange=celery(direct) key=celery
+celery-1       |                 
+celery-1       | 
+celery-1       | [tasks]
+celery-1       |   . apps.notifications.tasks.send_appointment_reminders
+celery-1       | 
+celery-1       | [2026-11-08 21:31:24,711: INFO/MainProcess] Connected to redis://:**@redis:6379/0
+celery-1       | [2026-11-08 21:31:24,712: INFO/MainProcess] mingle: searching for neighbors
+celery-1       | [2026-11-08 21:31:25,724: INFO/MainProcess] mingle: all alone
+celery-1       | [2026-11-08 21:31:25,738: INFO/MainProcess] celery@c803a81fa1f7 ready.
+db-1           | 
+db-1           | PostgreSQL Database directory appears to contain a database; Skipping initialization
+db-1           | 
+db-1           | 2026-11-08 18:31:18.432 UTC [1] LOG:  starting PostgreSQL 16.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+db-1           | 2026-11-08 18:31:18.432 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+db-1           | 2026-11-08 18:31:18.432 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+db-1           | 2026-11-08 18:31:18.434 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+db-1           | 2026-11-08 18:31:18.436 UTC [28] LOG:  database system was shut down at 2026-11-08 18:31:15 UTC
+db-1           | 2026-11-08 18:31:18.441 UTC [1] LOG:  database system is ready to accept connections
+nginx-1        | /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+nginx-1        | /docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+nginx-1        | /docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+nginx-1        | 10-listen-on-ipv6-by-default.sh: info: can not modify /etc/nginx/conf.d/default.conf (read-only file system?)
+nginx-1        | /docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+nginx-1        | /docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+nginx-1        | /docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+nginx-1        | /docker-entrypoint.sh: Configuration complete; ready for start up
+nginx-1        | 2026/11/08 18:31:24 [notice] 1#1: using the "epoll" event method
+nginx-1        | 2026/11/08 18:31:24 [notice] 1#1: nginx/1.31.8
+nginx-1        | 2026/11/08 18:31:24 [notice] 1#1: built by gcc 15.2.0 (Alpine 15.2.0) 
+nginx-1        | 2026/11/08 18:31:24 [notice] 1#1: OS: Linux 7.2.12-orbstack-00394-gbecdd6130068
+nginx-1        | 2026/11/08 18:31:24 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 20480:1048576
+nginx-1        | 2026/11/08 18:31:24 [notice] 1#1: start worker processes
+nginx-1        | 2026/11/08 18:31:24 [notice] 1#1: start worker process 20
+nginx-1        | 2026/11/08 18:31:24 [notice] 1#1: start worker process 21
+nginx-1        | 2026/11/08 18:31:24 [notice] 1#1: start worker process 22
+nginx-1        | 2026/11/08 18:31:24 [notice] 1#1: start worker process 23
+nginx-1        | 2026/11/08 18:31:24 [notice] 1#1: start worker process 24
+nginx-1        | 2026/11/08 18:31:24 [notice] 1#1: start worker process 25
+nginx-1        | 2026/11/08 18:31:24 [notice] 1#1: start worker process 26
+nginx-1        | 2026/11/08 18:31:24 [notice] 1#1: start worker process 27
+nginx-1        | 2026/11/08 18:31:24 [notice] 1#1: start worker process 28
+nginx-1        | 2026/11/08 18:31:24 [notice] 1#1: start worker process 29
+nginx-1        | 192.168.117.1 - - [08/Nov/2026:18:31:42 +0000] "GET / HTTP/1.1" 200 17458 "-" "curl/8.7.1" "-"
+nginx-1        | 192.168.117.1 - - [08/Nov/2026:18:31:42 +0000] "GET /accounts/login/ HTTP/1.1" 200 7812 "-" "curl/8.7.1" "-"
+nginx-1        | 192.168.117.1 - - [08/Nov/2026:18:31:42 +0000] "GET /appointments/doctors/ HTTP/1.1" 200 9150 "-" "curl/8.7.1" "-"
+nginx-1        | 192.168.117.1 - - [08/Nov/2026:18:31:42 +0000] "GET /appointments/my/ HTTP/1.1" 302 0 "-" "curl/8.7.1" "-"
+nginx-1        | 192.168.117.1 - - [08/Nov/2026:18:31:42 +0000] "GET /no-such-page/ HTTP/1.1" 404 179 "-" "curl/8.7.1" "-"

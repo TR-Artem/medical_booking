@@ -95,25 +95,25 @@
     <div class="row g-4">
       <div class="col-md-4">
         <div class="step-card">
-          <div class="step-number">01</div>
+          <div class="step-number" aria-hidden="true">01</div>
           <div class="step-icon"><i class="bi bi-search-heart"></i></div>
-          <h5 class="step-title">Выберите врача</h5>
+          <h3 class="step-title">Выберите врача</h3>
           <p class="step-desc text-muted">Найдите нужного специалиста по направлению или выберите из списка врачей клиники.</p>
         </div>
       </div>
       <div class="col-md-4">
         <div class="step-card step-card--accent">
-          <div class="step-number">02</div>
+          <div class="step-number" aria-hidden="true">02</div>
           <div class="step-icon"><i class="bi bi-calendar3-event"></i></div>
-          <h5 class="step-title">Выберите время</h5>
+          <h3 class="step-title">Выберите время</h3>
           <p class="step-desc">Просмотрите доступные слоты и выберите удобное время приёма — только свободные окошки.</p>
         </div>
       </div>
       <div class="col-md-4">
         <div class="step-card">
-          <div class="step-number">03</div>
+          <div class="step-number" aria-hidden="true">03</div>
           <div class="step-icon"><i class="bi bi-check2-circle"></i></div>
-          <h5 class="step-title">Подтверждение</h5>
+          <h3 class="step-title">Подтверждение</h3>
           <p class="step-desc text-muted">Запись подтверждена мгновенно. Напоминание придёт на e-mail за 24 часа до визита.</p>
         </div>
       </div>
@@ -179,7 +179,7 @@
           </div>
           <div class="dc-body">
             <div class="dc-specialty">{{ dp.specialty.name }}</div>
-            <h5 class="dc-name">{{ dp.user.full_name }}</h5>
+            <h3 class="dc-name">{{ dp.user.full_name }}</h3>
             {% if dp.experience_years %}
             <p class="dc-exp text-muted small">
               <i class="bi bi-award me-1"></i>Стаж {{ dp.experience_years }} лет
