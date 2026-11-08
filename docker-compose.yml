@@ -1,3 +1,5 @@
+name: medical_booking_dev
+
 
 services:
   db:

@@ -894,6 +894,37 @@ a {
   .stat-card .sc-value {
     font-size: 1.6rem;
   }
+
+  .table {
+    font-size: 0.78rem;
+    table-layout: auto;
+  }
+
+  .table > :not(caption) > * > * {
+    padding: 0.4rem 0.3rem;
+  }
+
+  .table thead th {
+    font-size: 0.68rem;
+    letter-spacing: 0;
+  }
+
+  .table .btn-sm {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.72rem;
+    white-space: normal;
+    line-height: 1.2;
+  }
+
+  .table .btn i {
+    display: block;
+    margin: 0 auto 0.1rem;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    white-space: normal;
+  }
 }
 
 @media (max-width: 767.98px) {
@@ -907,4 +938,54 @@ a {
 .hero .d-flex.gap-4 {
   flex-wrap: wrap;
   row-gap: 1.25rem;
+}
+
+/* Поля форм, которые Django рендерит без класса form-control */
+.card-body form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]),
+.card-body form textarea,
+.card-body form select,
+.auth-card form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]),
+.auth-card form textarea,
+.auth-card form select {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  font-size: 1rem;
+  color: var(--mc-text);
+  background-color: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-body form input:focus,
+.card-body form textarea:focus,
+.card-body form select:focus,
+.auth-card form input:focus,
+.auth-card form textarea:focus,
+.auth-card form select:focus {
+  outline: 0;
+  border-color: var(--mc-primary);
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+}
+
+.card-body form label,
+.auth-card form label {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.card-body form .helptext,
+.card-body form .form-text {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--mc-muted);
+  margin-top: 0.25rem;
+}
+
+.card-body form ul.errorlist {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+  color: #dc2626;
+  font-size: 0.85rem;
 }

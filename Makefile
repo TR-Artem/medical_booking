@@ -2,31 +2,35 @@
 
 setup:
 	@test -f .env || cp .env.example .env
-	docker compose build
+	$(DEV) build
 
 run:
-	docker compose up --build -d
+	$(DEV) up --build -d
 	@echo "Открыть: http://localhost:8000"
 
 check:
-	docker compose up -d --build
-	docker compose exec -T web sh -c "ruff check . && black --check . && python manage.py test"
+	$(PROD) exec -T web sh -c "ruff check . && black --check . && python manage.py test"
+
+check-dev:
+	$(DEV) up -d --build
+	$(DEV) exec -T web sh -c "ruff check . && black --check . && python manage.py test"
 
 format:
-	docker compose exec -T web sh -c "ruff check --fix . && black ."
+	$(PROD) exec -T web sh -c "ruff check --fix . && black ."
 
 docker-up:
-	docker compose up --build -d
+	$(DEV) up --build -d
 
 docker-down:
-	docker compose down
+	$(DEV) down
 
 logs:
-	docker compose logs -f --tail=100
+	$(DEV) logs -f --tail=100
 
 migrate:
-	docker compose exec -T web python manage.py migrate
+	$(PROD) exec -T web python manage.py migrate
 
+DEV = docker compose -f docker-compose.yml
 PROD = docker compose -f docker-compose.prod.yml --env-file .env.production
 
 deploy:
