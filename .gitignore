@@ -39,3 +39,5 @@ backups/
 *.dump
 *.gz
 dumps/
+
+release/

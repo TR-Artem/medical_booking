@@ -1,4 +1,4 @@
-.PHONY: setup run check format docker-up docker-down logs migrate deploy restart check-deploy test api-test quality-check performance logs-check security-check deps-check backup restore ports-check logs-security clean
+.PHONY: setup run check format docker-up docker-down logs migrate deploy restart check-deploy test api-test quality-check performance logs-check security-check deps-check backup restore ports-check logs-security build release-check release clean
 
 setup:
 	@test -f .env || cp .env.example .env
@@ -113,6 +113,19 @@ logs-security:
 	@mkdir -p reports
 	$(PROD) logs --no-color --tail=100 web celery nginx > reports/security_logs.txt
 	@grep -Eci "traceback|error|critical|fatal" reports/security_logs.txt || echo "критических ошибок не найдено"
+
+build:
+	@echo "Сборка release-образа"
+	$(PROD) build
+
+release-check: check test
+	@echo "Финальная проверка перед релизом пройдена"
+
+release: release-check
+	@mkdir -p release
+	@TS=$$(date +%Y%m%d); \
+	git archive --format=zip --prefix=medical_booking/ -o release/medical_booking_$$TS.zip HEAD; \
+	echo "Релизный архив: release/medical_booking_$$TS.zip"
 
 clean:
 	find . -name "__pycache__" -type d -prune -exec rm -rf {} +
