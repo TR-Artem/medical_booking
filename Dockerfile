@@ -11,8 +11,10 @@ RUN addgroup --system app && adduser --system --ingroup app app
 WORKDIR /app
 
 # Зависимости Python
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+ARG INSTALL_DEV=0
+COPY requirements.txt requirements-dev.txt ./
+RUN pip install --no-cache-dir -r requirements.txt \
+    && if [ "$INSTALL_DEV" = "1" ]; then pip install --no-cache-dir -r requirements-dev.txt; fi
 
 # Исходный код
 COPY . .

@@ -6,4 +6,4 @@ echo ========================================
 echo  Форматирование кода
 echo ========================================
 
-docker compose exec -T web sh -c "ruff check --fix . && black ."
+docker compose -f docker-compose.prod.yml --env-file .env.production --profile tools run --rm tools sh -c "ruff check --fix . && black ."

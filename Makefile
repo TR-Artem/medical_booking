@@ -12,14 +12,14 @@ run:
 	@echo "Открыть: http://localhost:8080"
 
 check:
-	$(PROD) exec -T web sh -c "ruff check . && black --check . && python manage.py test"
+	$(PROD) --profile tools run --rm tools sh -c "ruff check . && black --check . && python manage.py test"
 
 check-dev:
 	$(DEV) up -d --build
 	$(DEV) exec -T web sh -c "ruff check . && black --check . && python manage.py test"
 
 format:
-	$(PROD) exec -T web sh -c "ruff check --fix . && black ."
+	$(PROD) --profile tools run --rm tools sh -c "ruff check --fix . && black ."
 
 docker-up:
 	$(DEV) up --build -d
