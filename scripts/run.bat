@@ -7,4 +7,7 @@ echo  Запуск проекта
 echo ========================================
 
 docker compose up --build -d
-echo Открыть: http://localhost:8000
+docker compose exec -T web python manage.py migrate --noinput
+docker compose exec -T web python manage.py collectstatic --noinput --clear
+docker compose restart nginx
+echo Открыть: http://localhost:8080

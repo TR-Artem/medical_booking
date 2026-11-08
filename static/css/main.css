@@ -1,11 +1,991 @@
+/* МедЦентр — стили поверх Bootstrap 5.3 */
+
+:root {
+  --mc-primary: #2563eb;
+  --mc-primary-dark: #1d4ed8;
+  --mc-teal: #0d9488;
+  --mc-orange: #f97316;
+  --mc-green: #16a34a;
+  --mc-purple: #7c3aed;
+  --mc-blue: #0ea5e9;
+  --mc-ink: #0f172a;
+  --mc-text: #1e293b;
+  --mc-muted: #64748b;
+  --mc-line: #e2e8f0;
+  --mc-bg-soft: #f8fafc;
+  --mc-radius: 16px;
+  --mc-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.06);
+  --mc-shadow-lg: 0 12px 40px rgba(15, 23, 42, 0.12);
+}
+
 body {
-  min-height: 100vh;
+  font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--mc-text);
+  background: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--mc-ink);
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: var(--mc-primary);
+}
+
+/* ── утилиты, которых нет в Bootstrap ───────────────────────────────────── */
+.py-6 { padding-top: 5rem; padding-bottom: 5rem; }
+.min-vh-75 { min-height: min(75vh, 720px); }
+.fw-600 { font-weight: 600; }
+.fw-700 { font-weight: 700; }
+.ls-1 { letter-spacing: 0.08em; }
+.bg-light-subtle { background-color: var(--mc-bg-soft) !important; }
+.text-gradient {
+  background: linear-gradient(120deg, var(--mc-primary), var(--mc-teal));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ── навигация ───────────────────────────────────────────────────────────── */
+#mainNav {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--mc-line);
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
 }
 
 .navbar-brand {
+  color: var(--mc-ink);
+  font-weight: 800;
+  font-size: 1.15rem;
+}
+
+.navbar-brand:hover {
+  color: var(--mc-ink);
+}
+
+.brand-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--mc-primary), var(--mc-teal));
+  color: #fff;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.brand-icon--sm {
+  width: 34px;
+  height: 34px;
+  font-size: 1rem;
+}
+
+.brand-text {
+  white-space: nowrap;
+}
+
+.navbar .nav-link {
+  color: var(--mc-muted);
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+  border-radius: 10px;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link.active {
+  color: var(--mc-primary);
+  background: #eff6ff;
+}
+
+.navbar .btn-sm {
+  border-radius: 10px;
   font-weight: 600;
 }
 
+/* ── кнопки ──────────────────────────────────────────────────────────────── */
+.btn {
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: var(--mc-primary);
+  border-color: var(--mc-primary);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+}
+
+.btn-primary:hover {
+  background: var(--mc-primary-dark);
+  border-color: var(--mc-primary-dark);
+}
+
+.btn-outline-primary {
+  color: var(--mc-primary);
+  border-color: var(--mc-primary);
+}
+
+/* ── герой ───────────────────────────────────────────────────────────────── */
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(13, 148, 136, 0.14), transparent 40%),
+    radial-gradient(circle at 10% 90%, rgba(37, 99, 235, 0.12), transparent 45%);
+  pointer-events: none;
+}
+
+.hero .container {
+  z-index: 1;
+}
+
+.hero-title {
+  font-size: clamp(2.2rem, 4.5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.12;
+  margin-top: 1rem;
+}
+
+.hero-subtitle {
+  font-size: 1.15rem;
+  color: var(--mc-muted);
+  max-width: 540px;
+  margin-top: 1.25rem;
+  line-height: 1.6;
+}
+
+.trust-item {
+  min-width: 110px;
+}
+
+.trust-number {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--mc-ink);
+  line-height: 1.1;
+}
+
+.trust-label {
+  font-size: 0.9rem;
+  color: var(--mc-muted);
+}
+
+.trust-divider {
+  width: 1px;
+  background: var(--mc-line);
+}
+
+.hero-card-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+}
+
+.hero-card {
+  position: relative;
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid var(--mc-line);
+  overflow: hidden;
+}
+
+.hc-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--mc-line);
+  font-weight: 700;
+  color: var(--mc-ink);
+}
+
+.hc-body {
+  padding: 1.25rem;
+}
+
+.hc-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hc-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+  color: var(--mc-text);
+  font-size: 0.95rem;
+}
+
+.hc-detail i {
+  color: var(--mc-primary);
+  width: 1.1rem;
+}
+
+.hc-toast {
+  display: flex;
+  align-items: center;
+  padding: 0.85rem 1.25rem;
+  background: #fffbeb;
+  border-top: 1px solid #fde68a;
+  color: #92400e;
+}
+
+/* ── секции ──────────────────────────────────────────────────────────────── */
+.section-title {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 800;
+}
+
+.section-how {
+  background: #fff;
+}
+
+.step-card {
+  position: relative;
+  height: 100%;
+  padding: 2rem 1.75rem;
+  background: #fff;
+  border: 1px solid var(--mc-line);
+  border-radius: var(--mc-radius);
+  box-shadow: var(--mc-shadow);
+  overflow: hidden;
+}
+
+.step-number {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: #eef2ff;
+  line-height: 1;
+}
+
+.step-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: #eff6ff;
+  color: var(--mc-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.step-card--accent {
+  background: linear-gradient(160deg, var(--mc-primary), var(--mc-teal));
+  border-color: transparent;
+}
+
+.step-card--accent .step-title,
+.step-card--accent .step-desc,
+.step-card--accent .step-number {
+  color: #fff;
+}
+
+.step-card--accent .step-number {
+  color: rgba(255, 255, 255, 0.22);
+}
+
+.step-card--accent .step-icon {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.step-title {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.step-desc {
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+
+/* ── специальности ───────────────────────────────────────────────────────── */
+.specialty-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.1rem 1.2rem;
+  background: #fff;
+  border: 1px solid var(--mc-line);
+  border-radius: 14px;
+  color: var(--mc-ink);
+  font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.specialty-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--mc-shadow);
+  border-color: #bfdbfe;
+  color: var(--mc-ink);
+}
+
+.sc-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: var(--mc-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.sc-name {
+  line-height: 1.3;
+}
+
+/* ── врачи ───────────────────────────────────────────────────────────────── */
+.doctor-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--mc-line);
+  border-radius: var(--mc-radius);
+  box-shadow: var(--mc-shadow);
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.doctor-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--mc-shadow-lg);
+}
+
+.dc-photo {
+  height: 200px;
+  background: linear-gradient(135deg, #dbeafe, #ccfbf1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.dc-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dc-photo-placeholder {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--mc-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+}
+
+.dc-photo-placeholder--lg {
+  width: 140px;
+  height: 140px;
+  font-size: 4rem;
+}
+
+.dc-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1.25rem 1.4rem 1.4rem;
+}
+
+.dc-specialty {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--mc-teal);
+  background: #f0fdfa;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  margin-bottom: 0.6rem;
+}
+
+.dc-name {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 0.4rem;
+}
+
+.dc-exp,
+.dc-bio {
+  margin-bottom: 0.5rem;
+}
+
+.dc-exp {
+  color: var(--mc-muted);
+}
+
+.doctor-hero-card {
+  background: #fff;
+  border: 1px solid var(--mc-line);
+  border-radius: var(--mc-radius);
+  box-shadow: var(--mc-shadow);
+  overflow: hidden;
+}
+
+.dhc-photo {
+  background: linear-gradient(135deg, #dbeafe, #ccfbf1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+}
+
+.dhc-info {
+  padding: 1.75rem;
+}
+
+/* ── карточки статистики (панели) ───────────────────────────────────────── */
+.stat-card {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  column-gap: 0.75rem;
+  row-gap: 0.1rem;
+  align-items: center;
+  height: 100%;
+  padding: 1rem 0.9rem;
+  background: #fff;
+  border: 1px solid var(--mc-line);
+  border-radius: var(--mc-radius);
+  box-shadow: var(--mc-shadow);
+}
+
+.stat-card .sc-icon {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+.stat-card .sc-value {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.stat-card .sc-label {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.sc-icon--blue { background: #eff6ff; color: var(--mc-primary); }
+.sc-icon--teal { background: #f0fdfa; color: var(--mc-teal); }
+.sc-icon--green { background: #f0fdf4; color: var(--mc-green); }
+.sc-icon--orange { background: #fff7ed; color: var(--mc-orange); }
+
+.stat-card .sc-icon {
+  width: 44px;
+  height: 44px;
+  font-size: 1.2rem;
+}
+
+.stat-card .sc-value {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--mc-ink);
+  line-height: 1.1;
+}
+
+.stat-card .sc-label {
+  color: var(--mc-muted);
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+.stat-card--blue { border-left: 4px solid var(--mc-primary); }
+.stat-card--green { border-left: 4px solid var(--mc-green); }
+.stat-card--orange { border-left: 4px solid var(--mc-orange); }
+.stat-card--purple { border-left: 4px solid var(--mc-purple); }
+
+/* ── заголовки страниц и хлебные крошки ─────────────────────────────────── */
+.page-header {
+  margin-bottom: 1.5rem;
+}
+
+.d-flex.justify-content-between,
+.d-flex.gap-2,
+.d-flex.gap-3,
+.d-flex.gap-4 {
+  flex-wrap: wrap;
+}
+
+.d-flex.justify-content-between {
+  gap: 0.75rem;
+}
+
+.page-title,
+.page-header h1 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.page-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  margin-bottom: 0.25rem;
+}
+
+.breadcrumb {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.breadcrumb-item a {
+  color: var(--mc-muted);
+  text-decoration: none;
+}
+
+.breadcrumb-item.active {
+  color: var(--mc-ink);
+}
+
+/* ── слоты (расписание) ──────────────────────────────────────────────────── */
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 0.6rem;
+}
+
+.slot-date-label {
+  font-weight: 700;
+  color: var(--mc-ink);
+  margin: 1.5rem 0 0.6rem;
+  text-transform: capitalize;
+}
+
+.slot-chip {
+  display: block;
+  text-align: center;
+  padding: 0.65rem 0.5rem;
+  background: #fff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  color: var(--mc-primary);
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.slot-chip:hover {
+  background: var(--mc-primary);
+  color: #fff;
+}
+
+.slot-chip.selected,
+.slot-chip.active {
+  background: var(--mc-primary);
+  color: #fff;
+  border-color: var(--mc-primary);
+}
+
+.slot-chip.disabled,
+.slot-chip:disabled {
+  background: #f1f5f9;
+  border-color: var(--mc-line);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+/* ── фильтр специальностей ───────────────────────────────────────────────── */
+.spec-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.spec-chip {
+  display: inline-block;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--mc-line);
+  color: var(--mc-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.spec-chip:hover,
+.spec-chip.active,
+.spec-chip.show {
+  background: var(--mc-primary);
+  border-color: var(--mc-primary);
+  color: #fff;
+}
+
+/* ── записи пациента и администратора ───────────────────────────────────── */
+.appt-card {
+  background: #fff;
+  border: 1px solid var(--mc-line);
+  border-radius: var(--mc-radius);
+  box-shadow: var(--mc-shadow);
+  overflow: hidden;
+}
+
+.appt-row {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--mc-line);
+}
+
+.appt-row:last-child {
+  border-bottom: 0;
+}
+
+.appt-row--past {
+  opacity: 0.6;
+}
+
+.active-appt {
+  background: #f0f7ff;
+}
+
+.appt-date-box {
+  width: 64px;
+  min-width: 64px;
+  text-align: center;
+  border-radius: 14px;
+  background: #eff6ff;
+  color: var(--mc-primary);
+  padding: 0.5rem 0;
+}
+
+.appt-month {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.appt-day {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.appt-date {
+  font-size: 0.78rem;
+  color: var(--mc-muted);
+}
+
+.ar-month,
+.ar-day,
+.ar-date {
+  font-weight: 700;
+}
+
+.ar-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ar-meta {
+  color: var(--mc-muted);
+  font-size: 0.88rem;
+}
+
+.ar-doctor {
+  font-weight: 700;
+  color: var(--mc-ink);
+}
+
+.ar-complaint {
+  color: var(--mc-text);
+  font-size: 0.92rem;
+}
+
+.ar-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+/* ── профиль и аватар ────────────────────────────────────────────────────── */
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--mc-primary), var(--mc-teal));
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.avatar--sm {
+  width: 32px;
+  height: 32px;
+  font-size: 0.85rem;
+}
+
+.profile-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--mc-primary), var(--mc-teal));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.4rem;
+  margin: 0 auto 1rem;
+}
+
+.confirm-details {
+  background: var(--mc-bg-soft);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+}
+
+/* ── вход и регистрация ──────────────────────────────────────────────────── */
+.auth-page {
+  min-height: calc(100vh - 220px);
+  display: flex;
+  align-items: center;
+  padding: 3rem 0;
+  background: linear-gradient(160deg, #eff6ff 0%, #f0fdfa 100%);
+}
+
+.auth-card {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: var(--mc-shadow-lg);
+  padding: 2.25rem 2rem;
+  border: 1px solid var(--mc-line);
+}
+
+.auth-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--mc-primary), var(--mc-teal));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+  margin: 0 auto 1rem;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.auth-header h1,
+.auth-header h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.form-control,
+.form-select {
+  border-radius: 12px;
+  border-color: #cbd5e1;
+  padding: 0.6rem 0.9rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--mc-primary);
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+}
+
+.form-label {
+  font-weight: 600;
+  color: var(--mc-ink);
+  font-size: 0.92rem;
+}
+
+/* ── карточки общего назначения ─────────────────────────────────────────── */
 .card {
-  border-radius: 0.5rem;
+  border-radius: var(--mc-radius);
+  border-color: var(--mc-line);
+  box-shadow: var(--mc-shadow);
+}
+
+.table {
+  --bs-table-bg: transparent;
+}
+
+.table thead th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mc-muted);
+  border-bottom-color: var(--mc-line);
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+/* ── подвал ──────────────────────────────────────────────────────────────── */
+.footer {
+  background: var(--mc-ink);
+  color: #cbd5e1;
+  margin-top: auto;
+}
+
+.footer .text-muted {
+  color: #94a3b8 !important;
+}
+
+.footer .text-white {
+  color: #fff !important;
+}
+
+.footer-link {
+  color: #cbd5e1;
+  text-decoration: none;
+}
+
+.footer-link:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.border-secondary {
+  border-color: #1e293b !important;
+}
+
+/* ── адаптив ─────────────────────────────────────────────────────────────── */
+@media (max-width: 575.98px) {
+  .stat-card {
+    grid-template-columns: 1fr;
+    row-gap: 0.5rem;
+    padding: 1rem;
+  }
+
+  .stat-card .sc-icon,
+  .stat-card .sc-value,
+  .stat-card .sc-label {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .stat-card .sc-value {
+    font-size: 1.6rem;
+  }
+
+  .table {
+    font-size: 0.78rem;
+    table-layout: auto;
+  }
+
+  .table > :not(caption) > * > * {
+    padding: 0.4rem 0.3rem;
+  }
+
+  .table thead th {
+    font-size: 0.68rem;
+    letter-spacing: 0;
+  }
+
+  .table .btn-sm {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.72rem;
+    white-space: normal;
+    line-height: 1.2;
+  }
+
+  .table .btn i {
+    display: block;
+    margin: 0 auto 0.1rem;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .py-6 { padding-top: 3.5rem; padding-bottom: 3.5rem; }
+  .hero-subtitle { font-size: 1.02rem; }
+  .step-number { font-size: 2rem; }
+  .appt-row { flex-wrap: wrap; }
+  .ar-actions { width: 100%; }
+}
+
+.hero .d-flex.gap-4 {
+  flex-wrap: wrap;
+  row-gap: 1.25rem;
+}
+
+/* Поля форм, которые Django рендерит без класса form-control */
+.card-body form input:not([class]):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]),
+.card-body form textarea:not([class]),
+.card-body form select:not([class]),
+.auth-card form input:not([class]):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]),
+.auth-card form textarea:not([class]),
+.auth-card form select:not([class]) {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  font-size: 1rem;
+  color: var(--mc-text);
+  background-color: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-body form input:not([class]):focus,
+.card-body form textarea:not([class]):focus,
+.card-body form select:not([class]):focus,
+.auth-card form input:not([class]):focus,
+.auth-card form textarea:not([class]):focus,
+.auth-card form select:not([class]):focus {
+  outline: 0;
+  border-color: var(--mc-primary);
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+}
+
+.card-body form label,
+.auth-card form label {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.card-body form .helptext,
+.card-body form .form-text {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--mc-muted);
+  margin-top: 0.25rem;
+}
+
+.card-body form ul.errorlist {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+  color: #dc2626;
+  font-size: 0.85rem;
 }

@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ─── Безопасность ────────────────────────────────────────────────────────────
 SECRET_KEY = config("SECRET_KEY", default="django-insecure-change-me-in-production")
-DEBUG = config("DEBUG", default=True, cast=bool)
+DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1").split(",")
 
 # ─── Приложения ───────────────────────────────────────────────────────────────
@@ -141,6 +141,7 @@ if DEBUG:
 CELERY_BROKER_URL = config("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = config("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_TIMEZONE = TIME_ZONE
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 # ─── CORS ─────────────────────────────────────────────────────────────────────
