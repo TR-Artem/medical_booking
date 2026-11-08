@@ -1,4 +1,4 @@
-.PHONY: setup run check format docker-up docker-down logs migrate deploy restart check-deploy test api-test quality-check performance logs-check clean
+.PHONY: setup run check format docker-up docker-down logs migrate deploy restart check-deploy test api-test quality-check performance logs-check security-check deps-check backup restore ports-check logs-security clean
 
 setup:
 	@test -f .env || cp .env.example .env
@@ -76,6 +76,43 @@ logs-check:
 	@mkdir -p reports
 	$(PROD) logs --no-color --tail=100 web celery celery-beat nginx > reports/logs_tail.txt
 	@grep -Eci "traceback|error|critical|fatal" reports/logs_tail.txt || echo "критических ошибок не найдено"
+
+security-check:
+	@echo "=== Файлы .env в индексе git ==="
+	@git ls-files | grep -E "(^|/)\.env" || echo "Файлов .env в индексе нет (только примеры)"
+	@echo
+	@echo "=== Поиск секретов ==="
+	@git grep -nE "password|secret|token|api_key|apikey|jwt" -- ':!docs' ':!screenshots' ':!*.md' ':!*.html' | head -20 || true
+	@echo
+	@echo "Если найдены реальные значения — удалить и заменить на .env.example"
+
+deps-check:
+	@docker run --rm -v "$$(pwd)/requirements.txt:/req.txt:ro" python:3.12-slim \
+		sh -c "pip install -q pip-audit 2>/dev/null && pip-audit -r /req.txt"
+
+backup:
+	@mkdir -p backups
+	@TS=$$(date +%Y%m%d_%H%M); \
+	$(PROD) exec -T db sh -c 'pg_dump -U "$$POSTGRES_USER" "$$POSTGRES_DB"' > backups/backup_$$TS.sql; \
+	echo "Backup создан: backups/backup_$$TS.sql"
+
+restore:
+	@test -n "$(BACKUP)" || (echo "Укажите файл: make restore BACKUP=backups/backup_YYYYMMDD_HHMM.sql" && exit 1)
+	$(PROD) exec -T db sh -c 'dropdb -U "$$POSTGRES_USER" --if-exists medical_restore_test && createdb -U "$$POSTGRES_USER" medical_restore_test'
+	$(PROD) exec -T db sh -c 'psql -U "$$POSTGRES_USER" -d medical_restore_test -q' < $(BACKUP)
+	@echo "Восстановлено в medical_restore_test. Проверьте данные и удалите БД."
+
+ports-check:
+	@echo "=== Контейнеры и порты ==="
+	$(PROD) ps --format "{{.Service}}: {{.Ports}}"
+	@echo
+	@echo "=== Проверка хоста ==="
+	@for p in 80 5432 6379 8000; do (nc -z -w 1 localhost $$p && echo "$$p открыт") || echo "$$p закрыт"; done
+
+logs-security:
+	@mkdir -p reports
+	$(PROD) logs --no-color --tail=100 web celery nginx > reports/security_logs.txt
+	@grep -Eci "traceback|error|critical|fatal" reports/security_logs.txt || echo "критических ошибок не найдено"
 
 clean:
 	find . -name "__pycache__" -type d -prune -exec rm -rf {} +
