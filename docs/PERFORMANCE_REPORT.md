@@ -1,5 +1,7 @@
 # PERFORMANCE_REPORT.md
 
+> Репозиторий проекта: https://github.com/TR-Artem/medical_booking
+
 ## Условия замера
 
 - Стенд: production-compose на локальной машине (OrbStack), контейнеры web (gunicorn, 3 воркера), nginx, PostgreSQL 16, Redis 7.

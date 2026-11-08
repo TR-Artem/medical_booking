@@ -1,5 +1,7 @@
 # API_TEST_REPORT.md
 
+> Репозиторий проекта: https://github.com/TR-Artem/medical_booking
+
 ## Что проверялось
 
 Проект реализован как серверное Django-приложение с HTML-шаблонами. Публичного REST API нет: в `medical_booking/urls.py` подключены только `django-admin`, `apps.core`, `apps.accounts`, `apps.appointments`. DRF установлен в зависимости, но эндпоинты не описаны.

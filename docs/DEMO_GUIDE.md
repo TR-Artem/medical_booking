@@ -1,5 +1,7 @@
 # DEMO_GUIDE.md
 
+> Репозиторий проекта: https://github.com/TR-Artem/medical_booking
+
 ## Как быстро проверить проект
 
 1. Запустить стенд: `make deploy` (или `scripts\deploy.bat`).

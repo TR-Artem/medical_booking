@@ -1,5 +1,7 @@
 # RELEASE_NOTES.md
 
+> Репозиторий проекта: https://github.com/TR-Artem/medical_booking
+
 ## Версия 0.2.0 — production/demo-стенд (этап 3 УП.03)
 
 Дата: 08.11.2026
