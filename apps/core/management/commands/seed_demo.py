@@ -373,6 +373,34 @@ class Command(BaseCommand):
 
     def _seed_appointments(self, patient, doctors):
         today = timezone.localdate()
+
+        # Демо-стенд может жить несколько дней: вчерашние записи помечаем
+        # завершёнными, чтобы они не висели в «предстоящих».
+        stale = Appointment.objects.filter(
+            patient=patient,
+            slot__date__lt=today,
+            status__in=[Appointment.Status.BOOKED, Appointment.Status.CONFIRMED],
+        )
+        stale_count = stale.count()
+        if stale_count:
+            stale.update(status=Appointment.Status.COMPLETED)
+            self.stdout.write(f"завершены прошедшие демо-записи: {stale_count}")
+
+        # seed_demo — это сброс демо-данных: активные записи демо-пациента
+        # пересоздаются, чтобы после повторного запуска их было ровно три,
+        # а не накапливались с прошлых дней.
+        active = Appointment.objects.filter(patient=patient, slot__date__gte=today).exclude(
+            status__in=[Appointment.Status.CANCELLED, Appointment.Status.COMPLETED]
+        )
+        active_count = active.count()
+        for appointment in active.select_related("slot"):
+            slot = appointment.slot
+            slot.is_booked = False
+            slot.save(update_fields=["is_booked"])
+            appointment.delete()
+        if active_count:
+            self.stdout.write(f"пересозданы активные демо-записи: {active_count}")
+
         # По одной записи к первым трём врачам: сегодня, завтра и через два дня.
         plan = [
             (doctors[0][1], today, time(10, 0), "Плановый осмотр, повышенное давление."),

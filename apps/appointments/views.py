@@ -90,7 +90,7 @@ def slot_list(request, doctor_profile_id):
     """
     doctor_profile = get_object_or_404(DoctorProfile, pk=doctor_profile_id, is_active=True)
 
-    today = timezone.now().date()
+    today = timezone.localdate()
     slots = (
         TimeSlot.objects.filter(
             doctor_profile=doctor_profile,
@@ -229,7 +229,7 @@ def doctor_dashboard(request):
         return access_denied(request, "Доступ только для врачей.")
 
     doctor_profile = get_object_or_404(DoctorProfile, user=request.user)
-    today = timezone.now().date()
+    today = timezone.localdate()
 
     # Записи на сегодня
     todays_appointments = (
@@ -317,7 +317,7 @@ def block_slot(request, slot_id):
 @admin_required
 def admin_dashboard(request):
 
-    today = timezone.now().date()
+    today = timezone.localdate()
 
     # Сводка: записи сегодня
     todays_appointments = (
@@ -402,9 +402,9 @@ def manage_schedule(request):
     # Расписания на ближайшие 30 дней
     from datetime import timedelta
 
-    end_date = timezone.now().date() + timedelta(days=30)
+    end_date = timezone.localdate() + timedelta(days=30)
     schedules = (
-        Schedule.objects.filter(date__gte=timezone.now().date(), date__lte=end_date)
+        Schedule.objects.filter(date__gte=timezone.localdate(), date__lte=end_date)
         .select_related("doctor_profile__user", "doctor_profile__specialty", "room")
         .order_by("date", "start_time")
     )

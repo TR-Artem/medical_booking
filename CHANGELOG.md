@@ -15,7 +15,7 @@
 - Деплой на VPS с HTTPS: `deploy/setup-vps.sh`, `deploy/docker-compose.https.yml`,
   `deploy/nginx-https.conf.template`, продление Let's Encrypt, cron-перезагрузка Nginx.
 - Makefile: `seed`, `seed-dev`, `deploy-https`.
-- Тесты `seed_demo` (50 тестов всего).
+- Тесты `seed_demo` (51 тест всего).
 - Переменные HTTPS: `CSRF_TRUSTED_ORIGINS`, `SECURE_PROXY_SSL_HEADER`, HSTS, secure cookies.
 
 ### Changed
@@ -31,6 +31,9 @@
 
 - `collectstatic --clear` больше не падает с PermissionError на volume статики,
   созданном старым образом: Makefile выставляет владельца перед сборкой статики.
+- «Сегодня» в кабинетах врача и администратора считается по часовому поясу
+  `Europe/Moscow` (`timezone.localdate()`), а не по UTC: после 21:00 МСК
+  расписание больше не сдвигается на предыдущий день.
 
 ## [0.2.0] — 2026-11-08
 

@@ -85,3 +85,15 @@ class SeedDemoCommandTest(TestCase):
         self._seed()
         self.assertFalse(User.objects.filter(email="doctor@medcenter.local").exists())
         self.assertEqual(DoctorProfile.objects.count(), 5)
+
+    def test_past_demo_appointments_become_completed(self):
+        self._seed()
+        appointment = Appointment.objects.order_by("slot__date").first()
+        appointment.slot.date = timezone.localdate() - timedelta(days=1)
+        appointment.slot.save(update_fields=["date"])
+
+        self._seed()
+
+        appointment.refresh_from_db()
+        self.assertEqual(appointment.status, Appointment.Status.COMPLETED)
+        self.assertEqual(Appointment.objects.count(), 4)
