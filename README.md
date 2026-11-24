@@ -97,7 +97,7 @@ python manage.py seed_demo --without-appointments
 python manage.py seed_demo --keep-legacy    # не удалять старые учётки @medcenter.local
 ```
 
-Команда идемпотентна: повторный запуск обновляет данные и не создаёт дубликатов. Старые демо-учётки от `create_demo_data` (`@medcenter.local`) удаляются автоматически, чтобы в списке врачей не было дублей.
+Команда идемпотентна: повторный запуск обновляет данные и не создаёт дубликатов. Активные демо-записи пациента пересоздаются, прошедшие помечаются завершёнными. Старые демо-учётки от `create_demo_data` (`@medcenter.local`) удаляются автоматически, чтобы в списке врачей не было дублей.
 
 ## Production-стенд
 
@@ -207,7 +207,7 @@ medical_booking/
 ## Тесты и качество
 
 ```bash
-make check       # ruff + black --check + 50 тестов
+make check       # ruff + black --check + 51 тест
 make format      # автоформатирование
 ```
 
