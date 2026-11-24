@@ -8,7 +8,7 @@
 
 ## Шаги воспроизведения
 
-1. Войти пациентом: `patient` / `Demo1234!`.
+1. Войти пациентом: `patient@test.ru` / `Test1234!`.
 2. Открыть `http://localhost/appointments/admin/dashboard/`.
 3. Наблюдать редирект на `/`.
 

@@ -16,7 +16,7 @@ Issue: см. `docs/github_issue.md` (шаблон для GitHub Issues).
 
 ## 3. Как воспроизвести
 
-1. Войти пациентом (`patient` / `Demo1234!`).
+1. Войти пациентом (`patient@test.ru` / `Test1234!`).
 2. Открыть http://localhost/appointments/admin/dashboard/.
 3. Фактически: редирект на главную с сообщением.
 4. Ожидается: HTTP 403 и страница с объяснением.

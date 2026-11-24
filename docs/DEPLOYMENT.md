@@ -1,73 +1,140 @@
 # DEPLOYMENT.md
 
-## 1. Где развернут проект
+> Репозиторий проекта: https://github.com/TR-Artem/medical_booking
 
-Вариант C: локальный demo-стенд через Docker (production-конфигурация).
-Адрес: http://localhost (порт 80, через Nginx).
+## 1. Варианты развёртывания
 
-Причина выбора варианта: внешнего сервера и доменного имени у студента нет. Стенд поднимается тем же production-compose, что и на сервере, поэтому его можно перенести на VPS без изменений.
-
-## 2. Требования
-
-- ОС: macOS, Windows 10/11 или Linux.
-- Docker Engine / Docker Desktop / OrbStack с Docker Compose v2.
-- Свободный порт 80 на хосте.
-- Порты БД и Redis наружу не публикуются.
-- Переменные окружения: см. `.env.production.example` и `docs/CONFIGURATION.md`.
-
-## 3. Команды развертывания
-
-```bash
-git clone https://github.com/TR-Artem/medical_booking.git
-cd medical_booking
-git checkout feature/up03-stage3-deploy
-cp .env.production.example .env.production
-# заполнить SECRET_KEY и DB_PASSWORD в .env.production
-make deploy            # macOS / Linux
-scripts\deploy.bat     # Windows
-```
-
-`make deploy` (`scripts/deploy.bat`) выполняет:
-
-1. `docker compose -f docker-compose.prod.yml --env-file .env.production up --build -d`
-2. `migrate` — применение миграций;
-3. `collectstatic` — сборка статики в volume;
-4. `ps` — вывод статуса сервисов.
-
-Первичные данные и администратор (один раз):
-
-```bash
-docker compose -f docker-compose.prod.yml --env-file .env.production exec web python manage.py loaddata fixtures/initial_data.json
-docker compose -f docker-compose.prod.yml --env-file .env.production exec web python manage.py createsuperuser
-```
-
-## 4. Проверка
-
-- Адрес приложения: http://localhost
-- Проверка статуса и логов: `make check-deploy` / `scripts\check_deploy.bat`
-- Ожидаемый результат: все сервисы `running`, `db` в статусе `healthy`, `HTTP 200`.
-- Основной сценарий: открыть главную, перейти на вход, войти под администратором, увидеть приветствие.
-- Логи: `docker compose -f docker-compose.prod.yml --env-file .env.production logs --tail=80` — без ошибок и traceback (см. `logs/deploy_log.txt`).
-
-## 5. Остановка и перезапуск
-
-```bash
-make restart           # scripts\restart.bat
-docker compose -f docker-compose.prod.yml --env-file .env.production down   # остановка без удаления данных
-```
-
-Данные PostgreSQL хранятся в volume `postgres_data`. `down` их не удаляет; `down -v` удалит.
-
-Проверено: после `make restart` сайт отвечает HTTP 200, статика отдаётся, данные (1 пользователь, 6 специальностей) сохранились.
-
-## 6. Что изменено относительно разработки
-
-| Параметр | Разработка (`docker-compose.yml`) | Production (`docker-compose.prod.yml`) |
+| Вариант | Адрес | Назначение |
 |---|---|---|
-| Сервер приложения | `gunicorn --reload` | `gunicorn` без `--reload` |
+| Разработка | http://localhost:8080 | код монтируется, `gunicorn --reload` |
+| Production локально | http://localhost | образ без монтирования, Nginx, только 80-й порт |
+| VPS + HTTPS | https://домен | `deploy/setup-vps.sh`, Let's Encrypt, 80/443 |
+
+## 2. Production локально
+
+Требования: Docker Desktop / OrbStack, Docker Compose v2, свободный порт 80.
+
+```bash
+cp .env.production.example .env.production
+# заполнить SECRET_KEY и DB_PASSWORD (остальное можно оставить для демо)
+
+make deploy
+make seed
+```
+
+`make deploy`:
+
+1. собирает образы и поднимает `db`, `redis`, `web`, `celery`, `celery-beat`, `nginx`;
+2. применяет миграции;
+3. выставляет владельца volume статики и выполняет `collectstatic`;
+4. перезапускает `web` и `nginx`;
+5. печатает статус сервисов.
+
+Проверка:
+
+```bash
+make check-deploy
+curl -s -o /dev/null -w "HTTP %{http_code}\n" http://localhost/
+```
+
+Ожидается: все сервисы `running`, `db` — `healthy`, HTTP 200.
+
+## 3. VPS с HTTPS
+
+Требования:
+
+- Ubuntu/Debian, root или пользователь с sudo;
+- A-запись домена указывает на IP сервера;
+- порты 80 и 443 свободны;
+- установленный `git` и `curl`.
+
+Запуск одной командой:
+
+```bash
+DOMAIN=clinic.example.ru EMAIL=admin@example.ru bash deploy/setup-vps.sh
+```
+
+Скрипт:
+
+1. устанавливает Docker, если его нет;
+2. клонирует `main` в `/opt/medical_booking` (или обновляет существующий клон);
+3. создаёт `.env.production` со случайными `SECRET_KEY` и `DB_PASSWORD`, доменом, HTTPS-флагами;
+4. выпускает сертификат Let's Encrypt (standalone, 80-й порт);
+5. рендерит `deploy/nginx-https.conf` из шаблона;
+6. поднимает production-стек с HTTPS-оверрайдом;
+7. применяет миграции, собирает статику, запускает `seed_demo`;
+8. добавляет cron-задачу перезагрузки Nginx после продления сертификата.
+
+Проверка:
+
+```bash
+curl -I https://clinic.example.ru/
+docker compose -f docker-compose.prod.yml -f deploy/docker-compose.https.yml \
+  --env-file .env.production ps
+```
+
+Открыть `https://clinic.example.ru/`, войти под `admin@test.ru / Test1234!`.
+
+### HTTPS вручную
+
+Если сертификат уже выпущен:
+
+```bash
+make deploy-https
+```
+
+`deploy/docker-compose.https.yml` публикует 80/443, монтирует сертификаты и запускает контейнер `certbot` для продления (`webroot`, каждые 12 часов). Nginx перезагружается по cron раз в неделю.
+
+### Обязательные переменные для HTTPS
+
+```dotenv
+ALLOWED_HOSTS=clinic.example.ru
+CSRF_TRUSTED_ORIGINS=https://clinic.example.ru
+SITE_URL=https://clinic.example.ru
+SESSION_COOKIE_SECURE=True
+CSRF_COOKIE_SECURE=True
+SECURE_SSL_REDIRECT=True
+SECURE_HSTS_SECONDS=31536000
+```
+
+`SECURE_PROXY_SSL_HEADER` уже настроен в `settings.py`: Django доверяет `X-Forwarded-Proto` от Nginx и не уходит в редирект-петлю.
+
+## 4. Демо-данные
+
+```bash
+make seed     # production-стек
+make seed-dev # dev-стек
+```
+
+Создаются администратор, 5 врачей, пациент, расписание на 7 дней и 3 записи. Пароль — `Test1234!`. Команда идемпотентна, пароли демо-учёток сбрасываются.
+
+## 5. Остановка и данные
+
+```bash
+make docker-down                     # остановить без удаления данных
+make restart                         # перезапустить production
+```
+
+PostgreSQL хранится в volume `postgres_data`. `down` данные не удаляет, `down -v` — удаляет.
+
+## 6. Бэкап и восстановление
+
+```bash
+make backup
+make restore BACKUP=backups/backup_YYYYMMDD_HHMM.sql
+```
+
+Восстановление идёт в отдельную БД `medical_restore_test`, production-база не затрагивается.
+
+## 7. Отличия dev и prod
+
+| Параметр | Разработка | Production |
+|---|---|---|
+| Сервер | `gunicorn --reload` | `gunicorn` без reload |
 | Код | монтируется `.:/app` | только из образа |
-| Порты наружу | 80, 8000, 5432, 6379 | только 80 |
-| Пароли | в файле (`postgres`) | из `.env.production` |
-| `DEBUG` | `True` по умолчанию | `False` |
-| Перезапуск | `restart: always` | `restart: unless-stopped` |
-| Ожидание БД | нет | `healthcheck` и `condition: service_healthy` |
+| Порты | 80 (nginx), 8000, 5432, 6379 | 80 (и 443 при HTTPS) |
+| Пароли | в compose | из `.env.production` |
+| `DEBUG` | `True` | `False` |
+| Перезапуск | `always` | `unless-stopped` |
+| Ожидание БД | нет | healthcheck |
+| HTTPS | нет | Let's Encrypt + Nginx |

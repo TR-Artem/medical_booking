@@ -14,7 +14,7 @@ https://github.com/TR-Artem/medical_booking, ветка `feature/up03-stage6-cic
 
 ## 3. Как воспроизводится
 
-1. Войти пациентом: `patient` / `Demo1234!`.
+1. Войти пациентом: `patient@test.ru` / `Test1234!`.
 2. Открыть `/appointments/admin/dashboard/`.
 3. Фактически: 302 на главную. Ожидается: 403 и понятная страница.
 

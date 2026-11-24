@@ -1,134 +1,230 @@
-# Онлайн-запись в медицинский центр
+# МедЦентр — онлайн-запись в медицинский центр
 
-## Репозиторий
+Веб-приложение для записи пациентов к врачам: расписание, свободные слоты, бронирование, кабинеты врача и администратора, e-mail-уведомления.
 
-https://github.com/TR-Artem/medical_booking
+Репозиторий: https://github.com/TR-Artem/medical_booking
 
+![Главная страница](docs/screenshots/01-home.png)
+
+## Возможности
+
+**Пациент**
+- регистрация и вход, личный профиль;
+- выбор врача по специальности;
+- свободные слоты на 7 дней вперёд;
+- бронирование без двойных записей (транзакция + `select_for_update`);
+- список своих записей и отмена.
+
+**Врач**
+- записи на сегодня и ближайшие 14 дней;
+- отметка явки / неявки пациента;
+- блокировка слота (отпуск, учёба).
+
+**Администратор клиники**
+- записи на сегодня и статистика;
+- управление расписанием врачей (слоты генерируются автоматически);
+- управление кабинетами;
+- отмена записи пациента.
+
+**Системный администратор**
+- управление пользователями: создание, роли, редактирование, блокировка.
+
+**Уведомления**
+- письмо-подтверждение при записи и отмене;
+- напоминание за 24 часа через Celery Beat;
+- SMTP настраивается через `.env`; без SMTP сайт работает, письма не уходят.
+
+## Стек
+
+- Python 3.12, Django 5.2
+- PostgreSQL 16, Redis 7, Celery + django-celery-beat
+- Bootstrap 5, собственные CSS/JS, без фронтенд-сборки
+- Gunicorn + Nginx, Docker Compose
+- Ruff, Black, Django TestCase, GitHub Actions
+
+## Быстрый старт (Docker)
+
+Требуется Docker Desktop / OrbStack с Docker Compose v2.
+
+```bash
+git clone https://github.com/TR-Artem/medical_booking.git
+cd medical_booking
+
+make setup      # создать .env и собрать образы
+make run        # поднять контейнеры, применить миграции, собрать статику
+make seed-dev   # демо-данные: пользователи, врачи, расписание, записи
+```
+
+Открыть: **http://localhost:8080**
+
+Без Makefile:
+
+```bash
+cp .env.example .env
+docker compose up --build -d
+docker compose exec web python manage.py migrate
+docker compose exec web python manage.py seed_demo
+```
+
+## Демо-доступы
+
+Создаются командой `seed_demo`. Пароль у всех учёток — `Test1234!`.
+В поле «Логин или e-mail» вводится логин целиком (он совпадает с e-mail).
+
+| Роль | Логин | Куда попадает после входа |
+|---|---|---|
+| Администратор клиники | `admin@test.ru` | `/appointments/admin/dashboard/` |
+| Врач-кардиолог | `doctor@test.ru` | `/appointments/doctor/dashboard/` |
+| Врачи других специальностей | `doctor2@test.ru` … `doctor5@test.ru` | кабинет врача |
+| Пациент | `patient@test.ru` | главная, «Мои записи» |
+
+> Пароли демо-учёток сбрасываются при каждом запуске `seed_demo`. На реальном стенде смените их или не запускайте команду.
+
+## Команда seed_demo
+
+Создаёт полный демонстрационный набор и не требует `loaddata`:
+
+- 6 специальностей и 6 кабинетов;
+- администратора, 5 врачей с профилями, пациента;
+- расписание всех врачей на 7 дней вперёд (09:00–19:00 по графикам, обед заблокирован, воскресенье — короткий день);
+- 3 записи пациента: сегодня, завтра и через два дня.
+
+```bash
+python manage.py seed_demo                  # 7 дней, пароль Test1234!
+python manage.py seed_demo --days 14        # расписание на 14 дней
+python manage.py seed_demo --password 'ДругойПароль1!'
+python manage.py seed_demo --without-appointments
+python manage.py seed_demo --keep-legacy    # не удалять старые учётки @medcenter.local
+```
+
+Команда идемпотентна: повторный запуск обновляет данные и не создаёт дубликатов. Старые демо-учётки от `create_demo_data` (`@medcenter.local`) удаляются автоматически, чтобы в списке врачей не было дублей.
+
+## Production-стенд
+
+```bash
+cp .env.production.example .env.production
+# заполнить SECRET_KEY и DB_PASSWORD
+
+make deploy     # сборка, миграции, статика
+make seed       # демо-данные
+```
+
+Открыть: **http://localhost**
+
+Проверка: `make check-deploy` — статус сервисов, логи, HTTP-код.
+
+## VPS с HTTPS
+
+Скрипт `deploy/setup-vps.sh` разворачивает проект на чистом Ubuntu/Debian VPS: Docker, код, `.env.production`, Let's Encrypt, Nginx с HTTPS, миграции, демо-данные, cron для перезагрузки Nginx после продления сертификата.
+
+Перед запуском:
+
+1. A-запись домена указывает на IP сервера.
+2. Порты 80 и 443 свободны.
+
+```bash
+DOMAIN=clinic.example.ru EMAIL=admin@example.ru bash deploy/setup-vps.sh
+```
+
+Скрипт использует:
+
+- `deploy/nginx-https.conf.template` — HTTP→HTTPS, ACME-челлендж, HSTS, проксирование;
+- `deploy/docker-compose.https.yml` — порты 80/443, сертификаты, контейнер продления Certbot.
+
+Ручной запуск после выпуска сертификата:
+
+```bash
+make deploy-https
+```
+
+Файл `.env.production` для HTTPS должен содержать:
+
+```dotenv
+ALLOWED_HOSTS=clinic.example.ru
+CSRF_TRUSTED_ORIGINS=https://clinic.example.ru
+SITE_URL=https://clinic.example.ru
+SESSION_COOKIE_SECURE=True
+CSRF_COOKIE_SECURE=True
+SECURE_SSL_REDIRECT=True
+SECURE_HSTS_SECONDS=31536000
+```
+
+Django получает исходную схему из `X-Forwarded-Proto`, поэтому редиректа-петли за Nginx нет.
+
+## Скриншоты
+
+| Врачи и специальности | Свободные слоты |
+|---|---|
+| ![Врачи](docs/screenshots/02-doctors.png) | ![Слоты](docs/screenshots/03-slots.png) |
+
+| Записи пациента | Панель администратора |
+|---|---|
+| ![Мои записи](docs/screenshots/04-my-appointments.png) | ![Админ-панель](docs/screenshots/05-admin-dashboard.png) |
+
+| Управление расписанием | Кабинет врача |
+|---|---|
+| ![Расписание](docs/screenshots/06-admin-schedule.png) | ![Кабинет врача](docs/screenshots/07-doctor-dashboard.png) |
 
 ## Структура проекта
 
-
-```
-medical_booking/                     ← корень проекта
+```text
+medical_booking/
 ├── manage.py
-├── requirements.txt
-├── Dockerfile
-├── docker-compose.yml
-├── .env.example
-├── README.md
-│
-├── medical_booking/                 ← настройки Django
-│   ├── __init__.py
-│   ├── settings.py
-│   ├── urls.py
-│   ├── wsgi.py
-│   └── asgi.py
-│
+├── medical_booking/              # настройки Django
 ├── apps/
-│   ├── accounts/                    ← регистрация, авторизация, роли
-│   │   ├── __init__.py
-│   │   ├── admin.py
-│   │   ├── apps.py
-│   │   ├── forms.py
-│   │   ├── models.py
-│   │   ├── urls.py
-│   │   └── views.py
-│   │
-│   ├── appointments/                ← запись, расписание, кабинеты
-│   │   ├── __init__.py
-│   │   ├── admin.py
-│   │   ├── apps.py
-│   │   ├── forms.py
-│   │   ├── models.py
-│   │   ├── urls.py
-│   │   └── views.py
-│   │
-│   ├── notifications/               ← e-mail уведомления
-│   │   ├── __init__.py
-│   │   ├── apps.py
-│   │   └── services.py
-│   │
-│   └── core/                        ← главная страница, общие утилиты
-│       ├── __init__.py
-│       ├── apps.py
-│       ├── urls.py
-│       └── views.py
-│
-├── templates/
-│   ├── base.html                    ← базовый шаблон
-│   ├── accounts/
-│   │   ├── login.html
-│   │   ├── register.html
-│   │   └── profile.html
-│   ├── appointments/
-│   │   ├── doctor_list.html
-│   │   ├── slot_list.html
-│   │   ├── appointment_confirm.html
-│   │   └── my_appointments.html
-│   ├── doctor/
-│   │   ├── dashboard.html
-│   │   └── schedule.html
-│   └── admin_panel/
-│       ├── dashboard.html
-│       ├── schedule_manage.html
-│       └── rooms_manage.html
-│
-├── static/
-│   ├── css/
-│   │   └── main.css
-│   └── js/
-│       └── main.js
-│
-└── fixtures/
-   └── initial_data.json            ← специальности, тестовые врачи
+│   ├── accounts/                 # пользователи, роли, профили врачей, вход
+│   ├── appointments/             # специальности, кабинеты, расписание, слоты, записи
+│   ├── notifications/            # e-mail-уведомления и задачи Celery
+│   └── core/                     # главная страница, seed_demo
+├── templates/                    # шаблоны: пациент, врач, админ, сисадмин
+├── static/                       # CSS, JS, favicon
+├── fixtures/initial_data.json    # справочники (специальности, кабинеты)
+├── deploy/                       # VPS: HTTPS-конфиг Nginx, compose-оверрайд, скрипт
+├── docs/                         # отчёты, инструкции, screenshots
+├── scripts/                      # BAT-скрипты для Windows
+├── tests/                        # описание smoke/API/load-проверок
+├── Dockerfile
+├── docker-compose.yml            # разработка: 8080, код монтируется
+├── docker-compose.prod.yml       # production: только 80, код в образе
+├── Makefile
+└── README.md
 ```
 
+## Команды
 
-## Быстрый старт
+| Действие | Команда |
+|---|---|
+| Запуск dev-стенда | `make run` → http://localhost:8080 |
+| Демо-данные | `make seed-dev` |
+| Линтер, форматтер, тесты | `make check` |
+| Production-стенд | `make deploy` → http://localhost |
+| Демо-данные на production | `make seed` |
+| HTTPS на VPS | `bash deploy/setup-vps.sh` |
+| Статус и логи | `make check-deploy` |
+| Бэкап / восстановление БД | `make backup`, `make restore BACKUP=...` |
+| Остановка | `make docker-down` |
 
+## Тесты и качество
 
 ```bash
-# 1. Клонировать / распаковать проект
-cd medical_booking
-
-
-# 2. Скопировать .env
-cp .env.example .env
-# Заполнить переменные в .env
-
-
-# 3. Запустить через Docker
-docker-compose up --build
-
-
-# 4. Выполнить миграции и загрузить тестовые данные
-docker-compose exec web python manage.py migrate
-docker-compose exec web python manage.py loaddata fixtures/initial_data.json
-docker-compose exec web python manage.py createsuperuser
-
-
-# 5. Открыть браузер
-# http://localhost:8000
+make check       # ruff + black --check + 50 тестов
+make format      # автоформатирование
 ```
 
+CI: `.github/workflows/ci.yml` — линтер, форматтер, `manage.py check --deploy`, миграции, тесты, `pip-audit`.
 
-## Роли пользователей
+## Ограничения демо
 
+- Медцентр один; мультиклиничность и филиалы не поддерживаются.
+- Нет онлайн-оплаты, медицинской карты и интеграции с внешними МИС.
+- Письма требуют настроенного SMTP; по умолчанию в демо письма не доставляются.
+- Демо-пароль `Test1234!` публичный: для реальной эксплуатации задайте свои пароли и не запускайте `seed_demo` на проде.
 
-| Роль | Логин (тест) | Пароль |
-|------|-------------|--------|
-| Пациент | patient@test.ru | Test1234! |
-| Врач | doctor@test.ru | Test1234! |
-| Администратор | admin@test.ru | Test1234! |
+## Документация
 
-
-## Технологический стек
-- **Backend**: Python 3.12 + Django 5.x + Django REST Framework
-- **Database**: PostgreSQL 16
-- **Frontend**: HTML5 + Bootstrap 5 + Vanilla JS
-- **Auth**: JWT (djangorestframework-simplejwt)
-- **Email**: SMTP / SendGrid
-- **Deploy**: Nginx + Gunicorn + Docker
-
-
-
+- [INSTALL.md](INSTALL.md) — установка, команды, проверка сервисов.
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — локальный production-стенд и VPS с HTTPS.
+- [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md) — сценарий демонстрации.
+- [docs/CONFIGURATION.md](docs/CONFIGURATION.md) — переменные окружения.
+- [docs/TEST_PLAN.md](docs/TEST_PLAN.md) — план тестирования.
+- [SECURITY.md](SECURITY.md) — меры безопасности.

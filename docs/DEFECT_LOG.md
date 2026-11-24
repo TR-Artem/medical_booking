@@ -16,7 +16,7 @@
 | BUG-08 | Развёртывание | После деплоя отдавался старый CSS | Пересобрать с изменённым CSS | Средняя | fixed | `collectstatic --clear` + `restart web` в `make deploy` |
 | BUG-09 | Развёртывание | 502 после пересоздания `web` | Пересоздать контейнер web | Высокая | fixed | `restart nginx` в `make deploy` |
 | BUG-10 | Инфраструктура | Dev и prod делили том PostgreSQL, `down -v` мог удалить данные | Запустить `make check` при поднятом prod | Высокая | fixed | Разные имена проектов и томов |
-| BUG-11 | Демо | Учётки из README не существовали | Открыть страницу входа | Средняя | fixed | Команда `create_demo_data` |
+| BUG-11 | Демо | Учётки из README не существовали | Открыть страницу входа | Средняя | fixed | Команда `seed_demo` |
 | BUG-14 | Доступность | У кнопок нет доступного имени (меню, показ пароля, закрытие сообщения) | Lighthouse: button-name | Средняя | fixed | Добавлены `aria-label` |
 | BUG-15 | UI | `favicon.ico` отсутствует, ошибка 404 в консоли | Lighthouse: errors-in-console | Низкая | fixed | Добавлен `static/img/favicon.svg` и `<link rel="icon">` |
 | BUG-12 | Доступ | Закрытые разделы отдают 302 на главную, а не 403 | Пациентом открыть `/appointments/admin/dashboard/` | Низкая | open | Запланировать 403 с отдельной страницей (этап 6) |

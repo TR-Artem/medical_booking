@@ -4,6 +4,34 @@
 
 Все заметные изменения проекта. Формат основан на Keep a Changelog, версии — SemVer.
 
+## [0.3.0] — 2026-11-24
+
+### Added
+
+- Команда `seed_demo`: администратор, 5 врачей, пациент, 6 специальностей, 6 кабинетов,
+  расписание на 7 дней и 3 демо-записи. Идемпотентна, поддерживает `--days`,
+  `--password`, `--without-appointments`, `--keep-legacy`.
+- Скриншоты интерфейса в `docs/screenshots/` и галерея в README.
+- Деплой на VPS с HTTPS: `deploy/setup-vps.sh`, `deploy/docker-compose.https.yml`,
+  `deploy/nginx-https.conf.template`, продление Let's Encrypt, cron-перезагрузка Nginx.
+- Makefile: `seed`, `seed-dev`, `deploy-https`.
+- Тесты `seed_demo` (50 тестов всего).
+- Переменные HTTPS: `CSRF_TRUSTED_ORIGINS`, `SECURE_PROXY_SSL_HEADER`, HSTS, secure cookies.
+
+### Changed
+
+- README переписан под фактическое состояние: запуск, демо-доступы, seed_demo,
+  production, VPS/HTTPS, структура, ограничения.
+- INSTALL.md, docs/DEPLOYMENT.md, docs/DEMO_GUIDE.md, docs/CONFIGURATION.md обновлены.
+- `seed_demo` удаляет старые демо-учётки `@medcenter.local` от `create_demo_data`,
+  чтобы в списке врачей не было дублей.
+- Команда `create_demo_data` удалена: её заменяет `seed_demo`.
+
+### Fixed
+
+- `collectstatic --clear` больше не падает с PermissionError на volume статики,
+  созданном старым образом: Makefile выставляет владельца перед сборкой статики.
+
 ## [0.2.0] — 2026-11-08
 
 ### Added
