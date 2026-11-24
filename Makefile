@@ -1,4 +1,4 @@
-.PHONY: setup run check format docker-up docker-down logs migrate deploy restart check-deploy test api-test quality-check performance logs-check security-check deps-check backup restore ports-check logs-security build release-check release clean
+.PHONY: setup run check format docker-up docker-down logs migrate deploy deploy-https seed seed-dev restart check-deploy test api-test quality-check performance logs-check security-check deps-check backup restore ports-check logs-security build release-check release clean
 
 setup:
 	@test -f .env || cp .env.example .env
@@ -7,6 +7,7 @@ setup:
 run:
 	$(DEV) up --build -d
 	$(DEV) exec -T web python manage.py migrate --noinput
+	$(DEV) exec -T -u root web chown -R app:app /app/staticfiles
 	$(DEV) exec -T web python manage.py collectstatic --noinput --clear
 	$(DEV) restart nginx
 	@echo "Открыть: http://localhost:8080"
@@ -40,6 +41,8 @@ deploy:
 	@test -f .env.production || (echo "Создайте .env.production из .env.production.example" && exit 1)
 	$(PROD) up --build -d
 	$(PROD) exec -T web python manage.py migrate --noinput
+	# Volume статики мог остаться от старого образа с root-владельцем.
+	$(PROD) exec -T -u root web chown -R app:app /app/staticfiles
 	$(PROD) exec -T web python manage.py collectstatic --noinput --clear
 	$(PROD) restart web
 	$(PROD) restart nginx
@@ -49,6 +52,23 @@ restart:
 	$(PROD) down
 	$(PROD) up -d
 	$(PROD) ps
+
+seed:
+	$(PROD) exec -T web python manage.py seed_demo
+
+seed-dev:
+	$(DEV) exec -T web python manage.py seed_demo
+
+# HTTPS-стек для VPS: сначала выпустить сертификат через deploy/setup-vps.sh
+# или вручную, затем поднять оверрайд.
+deploy-https:
+	@test -f deploy/nginx-https.conf || (echo "Сначала: DOMAIN=... EMAIL=... bash deploy/setup-vps.sh" && exit 1)
+	docker compose -f docker-compose.prod.yml -f deploy/docker-compose.https.yml --env-file .env.production up --build -d
+	$(PROD) exec -T web python manage.py migrate --noinput
+	$(PROD) exec -T -u root web chown -R app:app /app/staticfiles
+	$(PROD) exec -T web python manage.py collectstatic --noinput --clear
+	$(PROD) restart nginx
+	docker compose -f docker-compose.prod.yml -f deploy/docker-compose.https.yml --env-file .env.production ps
 
 check-deploy:
 	$(PROD) ps

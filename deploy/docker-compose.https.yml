@@ -1,0 +1,31 @@
+# Оверрайд production-стека для VPS с HTTPS.
+# Использование (после выпуска сертификата deploy/setup-vps.sh):
+#   docker compose -f docker-compose.prod.yml -f deploy/docker-compose.https.yml \
+#     --env-file .env.production up -d
+
+services:
+  nginx:
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx-https.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_volume:/app/staticfiles:ro
+      - certbot_conf:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot:ro
+
+  # Продление сертификата каждые 12 часов. Nginx перечитывает сертификат
+  # по cron-задаче из deploy/setup-vps.sh (перезагрузка раз в неделю).
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: /bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done'
+
+volumes:
+  certbot_conf:
+    name: medical_booking_certbot_conf
+  certbot_www:
+    name: medical_booking_certbot_www

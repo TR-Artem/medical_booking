@@ -41,3 +41,6 @@ backups/
 dumps/
 
 release/
+
+# Генерируется deploy/setup-vps.sh под конкретный домен
+deploy/nginx-https.conf
