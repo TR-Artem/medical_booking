@@ -34,6 +34,20 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 systemctl enable --now docker >/dev/null 2>&1 || true
 
+if [ "${HARDEN:-1}" = "1" ]; then
+    log "Базовая защита сервера (UFW, fail2ban, автообновления)"
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -qq ufw fail2ban unattended-upgrades >/dev/null
+    ufw allow OpenSSH >/dev/null 2>&1 || true
+    ufw allow 80/tcp >/dev/null 2>&1 || true
+    ufw allow 443/tcp >/dev/null 2>&1 || true
+    ufw --force enable >/dev/null 2>&1 || true
+    systemctl enable --now fail2ban >/dev/null 2>&1 || true
+    systemctl enable --now unattended-upgrades >/dev/null 2>&1 || true
+    echo "UFW: разрешены 22, 80, 443. fail2ban и unattended-upgrades включены."
+fi
+
 log "Код проекта: $APP_DIR ($BRANCH)"
 if [ ! -d "$APP_DIR/.git" ]; then
     mkdir -p "$(dirname "$APP_DIR")"
@@ -62,16 +76,19 @@ DB_PASSWORD=${DB_PASSWORD}
 DB_HOST=db
 DB_PORT=5432
 
-EMAIL_HOST=localhost
+EMAIL_HOST=mailpit
 EMAIL_PORT=1025
 EMAIL_USE_TLS=False
 EMAIL_HOST_USER=
 EMAIL_HOST_PASSWORD=
+EMAIL_TIMEOUT=10
 DEFAULT_FROM_EMAIL=МедЦентр <noreply@${DOMAIN}>
 
 REDIS_URL=redis://redis:6379/0
+CACHE_URL=redis://redis:6379/1
 
 SITE_URL=https://${DOMAIN}
+APP_VERSION=0.4.0
 SESSION_COOKIE_SECURE=True
 CSRF_COOKIE_SECURE=True
 SECURE_SSL_REDIRECT=True
@@ -110,17 +127,27 @@ log "Сборка и запуск"
 "${COMPOSE[@]}" exec -T web python manage.py migrate --noinput
 "${COMPOSE[@]}" exec -T -u root web chown -R app:app /app/staticfiles
 "${COMPOSE[@]}" exec -T web python manage.py collectstatic --noinput --clear
-"${COMPOSE[@]}" exec -T web python manage.py seed_demo
+if [ "${SEED_DEMO:-1}" = "1" ]; then
+    "${COMPOSE[@]}" exec -T web python manage.py seed_demo
+else
+    echo "SEED_DEMO=0 — демо-данные не создаются"
+fi
 "${COMPOSE[@]}" exec -T web python manage.py check --deploy
 "${COMPOSE[@]}" restart nginx
 
 log "Проверка"
-curl -fsS -o /dev/null -w "https://${DOMAIN} -> HTTP %{http_code}\n" "https://${DOMAIN}/"
+curl -fsS -o /dev/null -w "https://${DOMAIN} -> HTTP %{http_code}\n" "https://${DOMAIN}/healthz/"
 
-log "Cron: перезагрузка Nginx после продления сертификата"
+log "Cron: перезагрузка Nginx и бэкапы БД"
+mkdir -p logs
 CRON_LINE="0 4 * * 1 cd ${APP_DIR} && ${COMPOSE[*]} exec -T nginx nginx -s reload >/dev/null 2>&1 # ${CRON_MARKER}"
-{ crontab -l 2>/dev/null | grep -v "$CRON_MARKER" || true; echo "$CRON_LINE"; } | crontab -
+BACKUP_LINE="15 3 * * * cd ${APP_DIR} && bash deploy/backup.sh >> logs/backup.log 2>&1 # ${CRON_MARKER}-backup"
+{
+    crontab -l 2>/dev/null | grep -v "$CRON_MARKER" || true
+    echo "$CRON_LINE"
+    echo "$BACKUP_LINE"
+} | crontab -
 
 log "Готово. Демо-стенд: https://${DOMAIN}"
-echo "Логины: admin@test.ru / doctor@test.ru / patient@test.ru, пароль Test1234!"
+echo "Логины: admin@test.ru / sysadmin@test.ru / doctor@test.ru / patient@test.ru, пароль Test1234!"
 echo "Файл настроек: ${APP_DIR}/.env.production"

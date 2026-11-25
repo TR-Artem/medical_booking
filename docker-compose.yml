@@ -1,5 +1,10 @@
 name: medical_booking_dev
 
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
 
 services:
   db:
@@ -13,12 +18,23 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    logging: *default-logging
 
   redis:
     image: redis:7-alpine
     restart: always
     ports:
       - "6379:6379"
+    logging: *default-logging
+
+  # Локальный SMTP для демо: письма видны на http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.20
+    restart: always
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    logging: *default-logging
 
   web:
     build: .
@@ -34,6 +50,7 @@ services:
     depends_on:
       - db
       - redis
+    logging: *default-logging
 
   celery:
     build: .
@@ -46,6 +63,7 @@ services:
     depends_on:
       - db
       - redis
+    logging: *default-logging
 
   celery-beat:
     build: .
@@ -58,6 +76,7 @@ services:
     depends_on:
       - db
       - redis
+    logging: *default-logging
 
   nginx:
     image: nginx:alpine
@@ -69,6 +88,7 @@ services:
       - static_volume:/app/staticfiles
     depends_on:
       - web
+    logging: *default-logging
 
 volumes:
   postgres_data:

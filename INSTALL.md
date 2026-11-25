@@ -12,9 +12,10 @@ make run        # поднять контейнеры, применить миг
 make seed-dev   # пользователи, 5 врачей, пациент, расписание на 7 дней
 ```
 
-Открыть: http://localhost:8080
+Открыть: http://localhost:8080<br>
+Письма: http://localhost:8025 (Mailpit).
 
-Демо-доступы: `admin@test.ru`, `doctor@test.ru`, `patient@test.ru`, пароль `Test1234!`.
+Демо-доступы: `admin@test.ru`, `sysadmin@test.ru`, `doctor@test.ru`, `patient@test.ru`, пароль `Test1234!`.
 
 ## Быстрый старт (Windows)
 

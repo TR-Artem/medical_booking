@@ -1,5 +1,11 @@
 name: medical_booking_prod
 
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   db:
     image: postgres:16-alpine
@@ -15,10 +21,21 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    logging: *default-logging
 
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    logging: *default-logging
+
+  # SMTP-приёмник для демо. Веб-интерфейс доступен только с сервера:
+  # ssh -L 8025:127.0.0.1:8025 user@server → http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.20
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"
+    logging: *default-logging
 
   web:
     build: .
@@ -33,6 +50,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+      mailpit:
+        condition: service_started
+    logging: *default-logging
 
   celery:
     build: .
@@ -45,6 +65,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+      mailpit:
+        condition: service_started
+    logging: *default-logging
 
   celery-beat:
     build: .
@@ -57,6 +80,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+    logging: *default-logging
 
   nginx:
     image: nginx:alpine
@@ -68,6 +92,7 @@ services:
       - static_volume:/app/staticfiles:ro
     depends_on:
       - web
+    logging: *default-logging
 
   tools:
     build:
@@ -76,10 +101,18 @@ services:
         INSTALL_DEV: "1"
     env_file:
       - .env.production
+    environment:
+      # Тесты не должны трогать боевой брокер и SMTP.
+      CELERY_TASK_ALWAYS_EAGER: "True"
+      EMAIL_BACKEND: "django.core.mail.backends.locmem.EmailBackend"
+      CACHE_URL: "redis://redis:6379/1"
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     profiles: ["tools"]
+    logging: *default-logging
 
 volumes:
   postgres_data:

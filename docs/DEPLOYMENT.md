@@ -24,7 +24,7 @@ make seed
 
 `make deploy`:
 
-1. собирает образы и поднимает `db`, `redis`, `web`, `celery`, `celery-beat`, `nginx`;
+1. собирает образы и поднимает `db`, `redis`, `mailpit`, `web`, `celery`, `celery-beat`, `nginx`;
 2. применяет миграции;
 3. выставляет владельца volume статики и выполняет `collectstatic`;
 4. перезапускает `web` и `nginx`;
@@ -34,10 +34,12 @@ make seed
 
 ```bash
 make check-deploy
+make health
 curl -s -o /dev/null -w "HTTP %{http_code}\n" http://localhost/
 ```
 
-Ожидается: все сервисы `running`, `db` — `healthy`, HTTP 200.
+Ожидается: все сервисы `running`, `db` — `healthy`, HTTP 200, `/healthz/` — `status: ok`.
+Письма демо-стенда: http://127.0.0.1:8025 (Mailpit).
 
 ## 3. VPS с HTTPS
 
@@ -57,13 +59,14 @@ DOMAIN=clinic.example.ru EMAIL=admin@example.ru bash deploy/setup-vps.sh
 Скрипт:
 
 1. устанавливает Docker, если его нет;
-2. клонирует `main` в `/opt/medical_booking` (или обновляет существующий клон);
-3. создаёт `.env.production` со случайными `SECRET_KEY` и `DB_PASSWORD`, доменом, HTTPS-флагами;
-4. выпускает сертификат Let's Encrypt (standalone, 80-й порт);
-5. рендерит `deploy/nginx-https.conf` из шаблона;
-6. поднимает production-стек с HTTPS-оверрайдом;
-7. применяет миграции, собирает статику, запускает `seed_demo`;
-8. добавляет cron-задачу перезагрузки Nginx после продления сертификата.
+2. включает UFW (22/80/443), fail2ban и unattended-upgrades (`HARDEN=0` отключает);
+3. клонирует `main` в `/opt/medical_booking` (или обновляет существующий клон);
+4. создаёт `.env.production` со случайными `SECRET_KEY` и `DB_PASSWORD`, доменом, HTTPS-флагами;
+5. выпускает сертификат Let's Encrypt (standalone, 80-й порт);
+6. рендерит `deploy/nginx-https.conf` из шаблона;
+7. поднимает production-стек с HTTPS-оверрайдом;
+8. применяет миграции, собирает статику, запускает `seed_demo` (`SEED_DEMO=0` отключает);
+9. добавляет cron: перезагрузка Nginx после продления сертификата и ежедневный бэкап БД.
 
 Проверка:
 
@@ -106,7 +109,9 @@ make seed     # production-стек
 make seed-dev # dev-стек
 ```
 
-Создаются администратор, 5 врачей, пациент, расписание на 7 дней и 3 записи. Пароль — `Test1234!`. Команда идемпотентна, пароли демо-учёток сбрасываются.
+Создаются администратор клиники, системный администратор, 5 врачей, пациент,
+расписание на 7 дней и 3 записи. Пароль — `Test1234!`. Команда идемпотентна,
+пароли демо-учёток сбрасываются.
 
 ## 5. Остановка и данные
 
@@ -120,11 +125,22 @@ PostgreSQL хранится в volume `postgres_data`. `down` данные не 
 ## 6. Бэкап и восстановление
 
 ```bash
-make backup
-make restore BACKUP=backups/backup_YYYYMMDD_HHMM.sql
+make backup                                   # deploy/backup.sh, gzip + ротация 14 дней
+make restore BACKUP=backups/backup_20261125_031500.sql.gz
 ```
 
-Восстановление идёт в отдельную БД `medical_restore_test`, production-база не затрагивается.
+`backup.sh` можно запускать вручную и из cron; переменные `BACKUP_DIR`,
+`BACKUP_RETENTION_DAYS`. Восстановление идёт в отдельную БД `medical_restore_test`,
+production-база не затрагивается.
+
+## 7. Мониторинг и логи
+
+- `GET /healthz/` — 200 и JSON `{"status":"ok","db":true,"version":"..."}`;
+  при недоступной БД — 503.
+- Внешний uptime-чек настраивается на `/healthz/` (UptimeRobot и аналоги).
+- Docker-логи ограничены: 10 МБ × 3 файла на сервис.
+- Приложение пишет события входа, бронирования, отмены и ошибки SMTP в stdout;
+  смотрите `docker compose logs web celery celery-beat`.
 
 ## 7. Отличия dev и prod
 

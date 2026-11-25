@@ -17,14 +17,19 @@
 | `DB_PASSWORD` | `postgres` | Пароль БД | Да | Для эксплуатации — свой пароль |
 | `DB_HOST` | `db` | Хост БД | Да | В Docker — имя сервиса `db` |
 | `DB_PORT` | `5432` | Порт БД | Нет | |
-| `EMAIL_HOST` | `smtp.gmail.com` | SMTP-сервер | Нет | Для тестов можно Mailpit |
-| `EMAIL_PORT` | `587` | Порт SMTP | Нет | |
-| `EMAIL_USE_TLS` | `True` | Шифрование SMTP | Нет | |
+| `EMAIL_BACKEND` | `django.core.mail.backends.smtp.EmailBackend` | Backend отправки писем | Нет | В тестах — `locmem`, без SMTP — `console` |
+| `EMAIL_HOST` | `mailpit` | SMTP-сервер | Нет | Для демо — сервис `mailpit` |
+| `EMAIL_PORT` | `1025` | Порт SMTP | Нет | Mailpit — 1025 |
+| `EMAIL_USE_TLS` | `False` | Шифрование SMTP | Нет | Для реального SMTP обычно `True` |
 | `EMAIL_HOST_USER` | `your-email@gmail.com` | Логин SMTP | Нет | |
 | `EMAIL_HOST_PASSWORD` | `your-app-password` | Пароль SMTP | Нет | Секрет, только в `.env` |
+| `EMAIL_TIMEOUT` | `10` | Таймаут SMTP, секунды | Нет | Чтобы бронирование не зависало |
 | `DEFAULT_FROM_EMAIL` | `МедЦентр <noreply@medcenter.ru>` | Адрес отправителя | Нет | |
 | `REDIS_URL` | `redis://redis:6379/0` | Брокер Celery | Да | В Docker — сервис `redis` |
+| `CACHE_URL` | `redis://redis:6379/1` | Кэш rate limit входа | Нет | Отдельная БД Redis |
+| `CELERY_TASK_ALWAYS_EAGER` | `False` | Выполнять задачи сразу | Нет | `True` для тестов и E2E |
 | `SITE_URL` | `http://localhost:8000` | Адрес сайта для ссылок в письмах | Нет | |
+| `APP_VERSION` | `0.4.0` | Версия в `/healthz/` | Нет | |
 | `SESSION_COOKIE_SECURE` | `False` | Cookie сессии только по HTTPS | Нет | `True` на HTTPS-стенде |
 | `CSRF_COOKIE_SECURE` | `False` | CSRF-cookie только по HTTPS | Нет | `True` на HTTPS-стенде |
 | `SECURE_SSL_REDIRECT` | `False` | Редирект HTTP→HTTPS | Нет | `True` за Nginx с TLS |
@@ -41,9 +46,11 @@
 |---|---|---|---|---|
 | nginx | 80 | 80 | Вход на сайт | Да (для демо) |
 | nginx (HTTPS) | 443 | 443 | Вход на сайт по HTTPS | Да (VPS) |
+| mailpit SMTP | 1025 | 1025 | Приём демо-писем | Dev |
+| mailpit UI | 8025 | 8025 | Просмотр писем | Dev, на prod только 127.0.0.1 |
 | web (gunicorn) | 8000 | 8000 | Django напрямую | Да (dev) |
 | db (PostgreSQL) | 5432 | 5432 | База данных | Да (dev, в prod закрыть) |
-| redis | 6379 | 6379 | Очередь Celery | Да (dev, в prod закрыть) |
+| redis | 6379 | 6379 | Очередь Celery и кэш | Да (dev, в prod закрыть) |
 
 ## 3. Зависимости и команды
 
@@ -73,4 +80,7 @@ make seed      # production
 make seed-dev  # разработка
 ```
 
-Создаются администратор (`admin@test.ru`), 5 врачей (`doctor@test.ru` … `doctor5@test.ru`), пациент (`patient@test.ru`), расписание на 7 дней и 3 записи. Пароль по умолчанию `Test1234!`, меняется через `--password`. Команда идемпотентна и сбрасывает пароли демо-учёток при каждом запуске.
+Создаются администратор (`admin@test.ru`), системный администратор (`sysadmin@test.ru`), 5 врачей (`doctor@test.ru` … `doctor5@test.ru`), пациент (`patient@test.ru`), расписание на 7 дней и 3 записи. Пароль по умолчанию `Test1234!`, меняется через `--password`. Команда идемпотентна и сбрасывает пароли демо-учёток при каждом запуске.
+
+Django admin (`/django-admin/`) доступен только сисадмину. Администратор клиники
+работает в приложении и суперпользователем не является.

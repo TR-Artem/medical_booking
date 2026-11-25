@@ -1,4 +1,4 @@
-.PHONY: setup run check format docker-up docker-down logs migrate deploy deploy-https seed seed-dev restart check-deploy test api-test quality-check performance logs-check security-check deps-check backup restore ports-check logs-security build release-check release clean
+.PHONY: setup run check format docker-up docker-down logs migrate deploy deploy-https seed seed-dev restart check-deploy test api-test quality-check performance logs-check security-check deps-check backup restore ports-check logs-security build release-check release clean health
 
 setup:
 	@test -f .env || cp .env.example .env
@@ -111,16 +111,16 @@ deps-check:
 		sh -c "pip install -q pip-audit 2>/dev/null && pip-audit -r /req.txt"
 
 backup:
-	@mkdir -p backups
-	@TS=$$(date +%Y%m%d_%H%M); \
-	$(PROD) exec -T db sh -c 'pg_dump -U "$$POSTGRES_USER" "$$POSTGRES_DB"' > backups/backup_$$TS.sql; \
-	echo "Backup создан: backups/backup_$$TS.sql"
+	bash deploy/backup.sh
 
 restore:
-	@test -n "$(BACKUP)" || (echo "Укажите файл: make restore BACKUP=backups/backup_YYYYMMDD_HHMM.sql" && exit 1)
+	@test -n "$(BACKUP)" || (echo "Укажите файл: make restore BACKUP=backups/backup_YYYYMMDD_HHMM.sql.gz" && exit 1)
 	$(PROD) exec -T db sh -c 'dropdb -U "$$POSTGRES_USER" --if-exists medical_restore_test && createdb -U "$$POSTGRES_USER" medical_restore_test'
-	$(PROD) exec -T db sh -c 'psql -U "$$POSTGRES_USER" -d medical_restore_test -q' < $(BACKUP)
+	@if [ "$${BACKUP##*.}" = "gz" ]; then gunzip -c "$(BACKUP)" | $(PROD) exec -T db sh -c 'psql -U "$$POSTGRES_USER" -d medical_restore_test -q'; else $(PROD) exec -T db sh -c 'psql -U "$$POSTGRES_USER" -d medical_restore_test -q' < "$(BACKUP)"; fi
 	@echo "Восстановлено в medical_restore_test. Проверьте данные и удалите БД."
+
+health:
+	@curl -fsS http://localhost/healthz/ | python3 -m json.tool || (echo "Health-check не прошёл" && exit 1)
 
 ports-check:
 	@echo "=== Контейнеры и порты ==="

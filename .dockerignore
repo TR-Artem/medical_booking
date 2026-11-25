@@ -19,5 +19,8 @@ docs
 screenshots
 reports
 backups
+node_modules
+tests/e2e
+release
 *.md
 !README.md
