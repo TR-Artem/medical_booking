@@ -52,9 +52,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # Сторонние
-    "rest_framework",
-    "rest_framework_simplejwt",
-    "corsheaders",
     "django_celery_beat",
     # Приложения проекта
     "apps.accounts",
@@ -67,7 +64,6 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -110,6 +106,9 @@ DATABASES = {
 # ─── Кастомная модель пользователя ────────────────────────────────────────────
 AUTH_USER_MODEL = "accounts.User"
 
+# Вход по логину или e-mail (см. apps/accounts/backends.py)
+AUTHENTICATION_BACKENDS = ["apps.accounts.backends.EmailOrUsernameBackend"]
+
 # ─── Пароли ───────────────────────────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -142,29 +141,22 @@ LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
 # ─── Django REST Framework ────────────────────────────────────────────────────
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
-    ],
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
-    ],
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 20,
-}
+# REST API в проекте не реализован. Зависимости DRF/JWT/CORS удалены,
+# чтобы не тащить неиспользуемую поверхность атаки.
 
 # ─── Email ────────────────────────────────────────────────────────────────────
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = config("EMAIL_HOST", default="smtp.gmail.com")
+EMAIL_BACKEND = config("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = config("EMAIL_HOST", default="")
 EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
 EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
 EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+EMAIL_TIMEOUT = config("EMAIL_TIMEOUT", default=10, cast=int)
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="МедЦентр <noreply@medcenter.ru>")
 
-# В режиме разработки — вывод писем в консоль
-if DEBUG:
+# Без SMTP-хоста письма не отправляются наружу: выводим их в консоль,
+# чтобы демо-стенд не зависал на сетевых таймаутах.
+if not EMAIL_HOST:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # ─── Celery ───────────────────────────────────────────────────────────────────
@@ -173,12 +165,22 @@ CELERY_RESULT_BACKEND = config("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+# Для тестов и E2E: задачи выполняются сразу, без брокера.
+CELERY_TASK_ALWAYS_EAGER = config("CELERY_TASK_ALWAYS_EAGER", default=False, cast=bool)
+CELERY_TASK_EAGER_PROPAGATES = False
 
-# ─── CORS ─────────────────────────────────────────────────────────────────────
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+# ─── Кэш (rate limit входа) ───────────────────────────────────────────────────
+CACHE_URL = config("CACHE_URL", default="redis://localhost:6379/1")
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": CACHE_URL,
+        "TIMEOUT": 300,
+    }
+}
+
+# ─── Версия приложения (health-check и релизы) ───────────────────────────────
+APP_VERSION = config("APP_VERSION", default="0.4.0")
 
 # ─── URL сайта (для ссылок в письмах) ────────────────────────────────────────
 SITE_URL = config("SITE_URL", default="http://localhost:8000")

@@ -19,12 +19,18 @@ class SeedDemoCommandTest(TestCase):
         self._seed()
 
         self.assertEqual(User.objects.filter(role=User.Role.ADMIN).count(), 1)
+        self.assertEqual(User.objects.filter(role=User.Role.SYSADMIN).count(), 1)
         self.assertEqual(User.objects.filter(role=User.Role.DOCTOR).count(), 5)
         self.assertEqual(User.objects.filter(role=User.Role.PATIENT).count(), 1)
 
         admin = User.objects.get(username="admin@test.ru")
-        self.assertTrue(admin.is_superuser)
-        self.assertTrue(admin.is_staff)
+        self.assertFalse(admin.is_superuser)
+        self.assertFalse(admin.is_staff)
+
+        sysadmin = User.objects.get(username="sysadmin@test.ru")
+        self.assertTrue(sysadmin.is_superuser)
+        self.assertTrue(sysadmin.is_staff)
+        self.assertTrue(sysadmin.check_password("Test1234!"))
 
         doctor = User.objects.get(username="doctor@test.ru")
         self.assertEqual(doctor.role, User.Role.DOCTOR)

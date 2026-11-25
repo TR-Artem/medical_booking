@@ -127,6 +127,7 @@ DOCTOR_BIOS = {
 }
 
 ADMIN_LOGIN = "admin@test.ru"
+SYSADMIN_LOGIN = "sysadmin@test.ru"
 PATIENT_LOGIN = "patient@test.ru"
 PATIENT_FIO = ("Иван", "Петров")
 
@@ -173,6 +174,7 @@ class Command(BaseCommand):
         specialties = self._seed_specialties()
         rooms = self._seed_rooms()
         admin = self._seed_admin(password)
+        sysadmin = self._seed_sysadmin(password)
         doctors = self._seed_doctors(specialties, password)
         patient = self._seed_patient(password)
         schedules = self._seed_schedules(doctors, rooms, days)
@@ -194,6 +196,7 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write("Вход в систему (пароль у всех учёток одинаковый):")
         self.stdout.write(f"  администратор  {admin.username} / {password}")
+        self.stdout.write(f"  сисадмин       {sysadmin.username} / {password}")
         self.stdout.write(f"  врач           {doctors[0][0].username} / {password}")
         self.stdout.write(f"  пациент        {patient.username} / {password}")
         self.stdout.write(f"  остальные врачи: {', '.join(d[0].username for d in doctors[1:])}")
@@ -260,8 +263,10 @@ class Command(BaseCommand):
         user.last_name = last_name
         user.pd_consent = True
         user.is_active = True
-        user.is_staff = role in (User.Role.ADMIN, User.Role.SYSADMIN)
-        user.is_superuser = role in (User.Role.ADMIN, User.Role.SYSADMIN)
+        # Полный доступ к Django admin — только у системного администратора.
+        # Администратор клиники работает в приложении и не является суперпользователем.
+        user.is_staff = role == User.Role.SYSADMIN
+        user.is_superuser = role == User.Role.SYSADMIN
         user.set_password(password)
         user.save()
         self.stdout.write(f"{'создан' if created else 'обновлён'}: {username} ({role})")
@@ -274,6 +279,16 @@ class Command(BaseCommand):
             User.Role.ADMIN,
             "Ольга",
             "Хитёва",
+            password,
+        )
+
+    def _seed_sysadmin(self, password):
+        return self._upsert_user(
+            SYSADMIN_LOGIN,
+            SYSADMIN_LOGIN,
+            User.Role.SYSADMIN,
+            "Сергей",
+            "Системный",
             password,
         )
 

@@ -1,7 +1,9 @@
 """
 Сервис уведомлений.
-Отправляет e-mail пациенту при бронировании, отмене и за 24 ч. до визита.
-Задача напоминания запускается через Celery Beat.
+
+Формирует и отправляет письма. Вызывается из Celery-задач
+(apps/notifications/tasks.py), поэтому сетевые ошибки не перехватываются:
+задача повторяет попытку с backoff.
 """
 
 import logging
@@ -13,19 +15,30 @@ from django.template.loader import render_to_string
 logger = logging.getLogger(__name__)
 
 
+def _send_email(*, subject, text_content, html_template, context, recipient):
+    if not recipient:
+        logger.warning("Не указан e-mail получателя, письмо не отправлено")
+        return
+
+    html_content = render_to_string(html_template, context)
+    email = EmailMultiAlternatives(
+        subject=subject,
+        body=text_content,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[recipient],
+    )
+    email.attach_alternative(html_content, "text/html")
+    email.send(fail_silently=False)
+    logger.info("Письмо отправлено: %s (%s)", recipient, subject)
+
+
 def send_booking_confirmation(appointment):
-    """
-    Письмо подтверждения записи.
-    Отправляется сразу после успешного бронирования.
-    HTML-шаблон: templates/notifications/booking_confirmation.html
-    """
+    """Письмо подтверждения записи."""
     patient = appointment.patient
     slot = appointment.slot
     doctor = slot.doctor_profile
-
     subject = f'Подтверждение записи — {slot.date.strftime("%d.%m.%Y")}'
 
-    # Контекст для шаблона
     context = {
         "subject": subject,
         "patient_name": patient.first_name or patient.username,
@@ -36,12 +49,7 @@ def send_booking_confirmation(appointment):
         "room": str(slot.room) if slot.room else "Уточняется",
         "site_url": settings.SITE_URL,
     }
-
-    try:
-        # Отправляем HTML
-        html_content = render_to_string("notifications/booking_confirmation.html", context)
-        # Отправляем plaintext (резервный)
-        text_content = f"""Здравствуйте, {patient.first_name}!
+    text_content = f"""Здравствуйте, {patient.first_name}!
 
 Вы успешно записаны на приём:
 
@@ -59,31 +67,20 @@ def send_booking_confirmation(appointment):
 С уважением,
 Медицинский центр"""
 
-        email = EmailMultiAlternatives(
-            subject=subject,
-            body=text_content,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[patient.email],
-        )
-        email.attach_alternative(html_content, "text/html")
-        email.send(fail_silently=False)
-
-        logger.info(f"Письмо подтверждения отправлено: {patient.email}")
-
-    except Exception as exc:
-        logger.error(f"Ошибка отправки письма подтверждения на {patient.email}: {exc}")
+    _send_email(
+        subject=subject,
+        text_content=text_content,
+        html_template="notifications/booking_confirmation.html",
+        context=context,
+        recipient=patient.email,
+    )
 
 
 def send_cancellation_notice(appointment):
-    """
-    Письмо об отмене записи.
-    Отправляется при отмене пациентом или администратором.
-    HTML-шаблон: templates/notifications/cancellation.html
-    """
+    """Письмо об отмене записи."""
     patient = appointment.patient
     slot = appointment.slot
     doctor = slot.doctor_profile
-
     subject = f'Запись отменена — {slot.date.strftime("%d.%m.%Y")}'
 
     context = {
@@ -94,10 +91,7 @@ def send_cancellation_notice(appointment):
         "time": slot.start_time.strftime("%H:%M"),
         "site_url": settings.SITE_URL,
     }
-
-    try:
-        html_content = render_to_string("notifications/cancellation.html", context)
-        text_content = f"""Здравствуйте, {patient.first_name}!
+    text_content = f"""Здравствуйте, {patient.first_name}!
 
 Ваша запись на приём отменена:
 
@@ -111,35 +105,24 @@ def send_cancellation_notice(appointment):
 С уважением,
 Медицинский центр"""
 
-        email = EmailMultiAlternatives(
-            subject=subject,
-            body=text_content,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[patient.email],
-        )
-        email.attach_alternative(html_content, "text/html")
-        email.send(fail_silently=False)
-
-        logger.info(f"Письмо об отмене отправлено: {patient.email}")
-
-    except Exception as exc:
-        logger.error(f"Ошибка отправки письма об отмене на {patient.email}: {exc}")
+    _send_email(
+        subject=subject,
+        text_content=text_content,
+        html_template="notifications/cancellation.html",
+        context=context,
+        recipient=patient.email,
+    )
 
 
 def send_reminder(appointment):
-    """
-    Напоминание о визите за 24 часа.
-    Вызывается Celery-задачей.
-    HTML-шаблон: templates/notifications/reminder.html
-    """
+    """Напоминание о визите за 24 часа. Возвращает True, если письмо ушло."""
     if appointment.reminder_sent:
-        logger.info(f"Напоминание уже отправлено для записи {appointment.id}")
-        return
+        logger.info("Напоминание уже отправлено для записи %s", appointment.id)
+        return False
 
     patient = appointment.patient
     slot = appointment.slot
     doctor = slot.doctor_profile
-
     subject = f'Напоминание о визите завтра — {slot.date.strftime("%d.%m.%Y")}'
 
     context = {
@@ -151,10 +134,7 @@ def send_reminder(appointment):
         "room": str(slot.room) if slot.room else "Уточняется",
         "site_url": settings.SITE_URL,
     }
-
-    try:
-        html_content = render_to_string("notifications/reminder.html", context)
-        text_content = f"""Здравствуйте, {patient.first_name}!
+    text_content = f"""Здравствуйте, {patient.first_name}!
 
 Напоминаем о вашем визите ЗАВТРА:
 
@@ -169,20 +149,14 @@ def send_reminder(appointment):
 С уважением,
 Медицинский центр"""
 
-        email = EmailMultiAlternatives(
-            subject=subject,
-            body=text_content,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[patient.email],
-        )
-        email.attach_alternative(html_content, "text/html")
-        email.send(fail_silently=False)
+    _send_email(
+        subject=subject,
+        text_content=text_content,
+        html_template="notifications/reminder.html",
+        context=context,
+        recipient=patient.email,
+    )
 
-        # Отмечаем что напоминание отправлено
-        appointment.reminder_sent = True
-        appointment.save(update_fields=["reminder_sent"])
-
-        logger.info(f"Напоминание отправлено: {patient.email}")
-
-    except Exception as exc:
-        logger.error(f"Ошибка отправки напоминания на {patient.email}: {exc}")
+    appointment.reminder_sent = True
+    appointment.save(update_fields=["reminder_sent"])
+    return True

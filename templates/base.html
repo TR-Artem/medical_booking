@@ -135,6 +135,7 @@
         <h4 class="h6 text-white mb-3">Быстрые ссылки</h4>
         <ul class="list-unstyled mb-0">
           <li class="mb-1"><a href="{% url 'appointments:doctor_list' %}" class="footer-link">Список врачей</a></li>
+          <li class="mb-1"><a href="{% url 'core:privacy' %}" class="footer-link">Политика ПДн</a></li>
           {% if not user.is_authenticated %}
           <li class="mb-1"><a href="{% url 'accounts:register' %}" class="footer-link">Регистрация</a></li>
           <li><a href="{% url 'accounts:login' %}" class="footer-link">Войти</a></li>

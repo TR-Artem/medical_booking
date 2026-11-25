@@ -50,6 +50,12 @@ class PatientRegistrationForm(UserCreationForm):
             "pd_consent",
         )
 
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip()
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("Пользователь с таким e-mail уже зарегистрирован.")
+        return email
+
     def save(self, commit=True):
         user = super().save(commit=False)
         user.role = User.Role.PATIENT
@@ -86,3 +92,10 @@ class ProfileUpdateForm(forms.ModelForm):
             "email": "Email",
             "phone": "Телефон",
         }
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip()
+        duplicate = User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk)
+        if duplicate.exists():
+            raise forms.ValidationError("Этот e-mail уже занят другим пользователем.")
+        return email

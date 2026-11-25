@@ -67,6 +67,9 @@
           </form>
 
           <hr class="my-4">
+          <p class="text-center small mb-2">
+            <a href="{% url 'accounts:password_reset' %}" class="text-muted">Забыли пароль?</a>
+          </p>
           <p class="text-center text-muted small mb-0">
             Нет аккаунта?
             <a href="{% url 'accounts:register' %}" class="text-primary fw-500">Зарегистрироваться</a>

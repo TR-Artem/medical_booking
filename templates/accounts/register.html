@@ -88,7 +88,7 @@
                        {% if form.pd_consent.value %}checked{% endif %}>
                 <label class="form-check-label small" for="pdConsent">
                   Я даю согласие на обработку
-                  <a href="#" class="text-primary">персональных данных</a>
+                  <a href="{% url 'core:privacy' %}" target="_blank" rel="noopener" class="text-primary">персональных данных</a>
                   в соответствии с ФЗ-152
                 </label>
                 {% for e in form.pd_consent.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
