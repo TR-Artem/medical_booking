@@ -22,6 +22,7 @@ from datetime import datetime, time, timedelta
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.accounts.models import DoctorProfile, User
@@ -371,6 +372,29 @@ class Command(BaseCommand):
 
     # ── демонстрационные записи ──────────────────────────────────────────────
 
+    def _pick_future_slot(self, profile, day, preferred_time):
+        """Ближайший свободный слот начиная с желаемого времени.
+
+        Если на выбранный день будущих слотов не осталось (например, демо
+        запускают поздно вечером), берём первый свободный слот врача вперёд:
+        запись в прошлом создавать нельзя.
+        """
+        now = timezone.localtime()
+        future = TimeSlot.objects.filter(
+            doctor_profile=profile,
+            is_booked=False,
+            is_blocked=False,
+        ).filter(Q(date__gt=now.date()) | Q(date=now.date(), start_time__gt=now.time()))
+
+        slot = (
+            future.filter(date=day, start_time__gte=preferred_time).order_by("start_time").first()
+        )
+        if slot is None:
+            slot = future.filter(date=day).order_by("start_time").first()
+        if slot is None:
+            slot = future.order_by("date", "start_time").first()
+        return slot
+
     def _seed_appointments(self, patient, doctors):
         today = timezone.localdate()
 
@@ -433,17 +457,7 @@ class Command(BaseCommand):
                 created_count += 1
                 continue
 
-            slot = (
-                TimeSlot.objects.filter(
-                    doctor_profile=profile,
-                    date=day,
-                    start_time__gte=preferred_time,
-                    is_booked=False,
-                    is_blocked=False,
-                )
-                .order_by("start_time")
-                .first()
-            )
+            slot = self._pick_future_slot(profile, day, preferred_time)
             if slot is None:
                 continue
 

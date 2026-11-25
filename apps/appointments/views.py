@@ -11,7 +11,7 @@ from functools import wraps
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db import models, transaction
+from django.db import IntegrityError, models, transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -90,13 +90,17 @@ def slot_list(request, doctor_profile_id):
     """
     doctor_profile = get_object_or_404(DoctorProfile, pk=doctor_profile_id, is_active=True)
 
-    today = timezone.localdate()
+    now = timezone.localtime()
     slots = (
         TimeSlot.objects.filter(
             doctor_profile=doctor_profile,
-            date__gte=today,
+            date__gte=now.date(),
             is_booked=False,
             is_blocked=False,
+        )
+        # Сегодняшние слоты, которые уже начались, записываться нельзя.
+        .filter(
+            models.Q(date__gt=now.date()) | models.Q(date=now.date(), start_time__gt=now.time())
         )
         .select_related("room")
         .order_by("date", "start_time")
@@ -144,7 +148,7 @@ def book_appointment(request, slot_id):
                 # Блокируем строку на время транзакции — защита от гонки
                 locked_slot = TimeSlot.objects.select_for_update().get(pk=slot_id)
 
-                if locked_slot.is_booked or locked_slot.is_blocked:
+                if not locked_slot.is_available:
                     messages.error(
                         request, "К сожалению, слот только что заняли. Выберите другое время."
                     )
@@ -171,6 +175,11 @@ def book_appointment(request, slot_id):
                 f"Подтверждение отправлено на e-mail.",
             )
             return redirect("appointments:my_appointments")
+
+        except IntegrityError:
+            # Гонка: параллельная запись на этот же слот уже создана.
+            messages.error(request, "Этот слот уже занят. Выберите другое время.")
+            return redirect("appointments:slot_list", doctor_profile_id=slot.doctor_profile_id)
 
         except Exception:
             messages.error(request, "Ошибка при бронировании. Попробуйте ещё раз.")

@@ -207,7 +207,7 @@ medical_booking/
 ## Тесты и качество
 
 ```bash
-make check       # ruff + black --check + 51 тест
+make check       # ruff + black --check + 58 тестов
 make format      # автоформатирование
 ```
 

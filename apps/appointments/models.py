@@ -7,9 +7,10 @@
   Appointment — запись пациента на слот
 """
 
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 from django.db import models
+from django.utils import timezone
 
 
 class Specialty(models.Model):
@@ -194,12 +195,24 @@ class TimeSlot(models.Model):
         )
 
     @property
+    def start_at(self):
+        """Начало приёма как aware-datetime в часовом поясе клиники."""
+        return timezone.make_aware(
+            datetime.combine(self.date, self.start_time),
+            timezone.get_current_timezone(),
+        )
+
+    @property
+    def is_past(self):
+        return self.start_at <= timezone.now()
+
+    @property
     def is_available(self):
-        return not self.is_booked and not self.is_blocked and self.date >= date.today()
+        return not self.is_booked and not self.is_blocked and not self.is_past
 
     @property
     def datetime_start(self):
-        return datetime.combine(self.date, self.start_time)
+        return self.start_at
 
 
 class Appointment(models.Model):
@@ -219,10 +232,10 @@ class Appointment(models.Model):
         verbose_name="Пациент",
         limit_choices_to={"role": "patient"},
     )
-    slot = models.OneToOneField(
+    slot = models.ForeignKey(
         TimeSlot,
         on_delete=models.CASCADE,
-        related_name="appointment",
+        related_name="appointments",
         verbose_name="Временной слот",
     )
     status = models.CharField(
@@ -241,6 +254,15 @@ class Appointment(models.Model):
         verbose_name = "Запись"
         verbose_name_plural = "Записи"
         ordering = ["-created_at"]
+        constraints = [
+            # На один слот может быть только одна активная запись.
+            # Отменённые, завершённые и неявившиеся записи остаются в истории.
+            models.UniqueConstraint(
+                fields=["slot"],
+                condition=models.Q(status__in=["booked", "confirmed"]),
+                name="unique_active_appointment_per_slot",
+            ),
+        ]
 
     def __str__(self):
         return (
