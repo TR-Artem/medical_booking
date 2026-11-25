@@ -7,10 +7,13 @@
 # ══════════════════════════════════════════════════════════════════════════════
 #  ПАЦИЕНТ — выбор врача и запись
 # ══════════════════════════════════════════════════════════════════════════════
+import logging
 from functools import wraps
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.db import IntegrityError, models, transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -18,12 +21,14 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.accounts.models import DoctorProfile, User
-from apps.notifications.services import (
-    send_booking_confirmation,
-    send_cancellation_notice,
+from apps.notifications.tasks import (
+    send_booking_confirmation_task,
+    send_cancellation_notice_task,
 )
 
 from .models import Appointment, Room, Schedule, Specialty, TimeSlot
+
+logger = logging.getLogger(__name__)
 
 
 def access_denied(request, text):
@@ -60,24 +65,36 @@ def doctor_required(view_func):
 
 def doctor_list(request):
     """
-    Список врачей с фильтрацией по специальности.
+    Список врачей с фильтрацией по специальности и поиском.
     Доступен без авторизации — пациент может посмотреть врачей заранее.
     """
     specialties = Specialty.objects.filter(is_active=True)
     specialty_id = request.GET.get("specialty")
+    query = (request.GET.get("q") or "").strip()
 
     doctors = DoctorProfile.objects.filter(is_active=True).select_related("user", "specialty")
     if specialty_id:
         doctors = doctors.filter(specialty_id=specialty_id)
+    if query:
+        doctors = doctors.filter(
+            models.Q(user__first_name__icontains=query)
+            | models.Q(user__last_name__icontains=query)
+            | models.Q(specialty__name__icontains=query)
+        )
 
     selected_specialty = None
     if specialty_id:
         selected_specialty = specialties.filter(pk=specialty_id).first()
 
+    paginator = Paginator(doctors.order_by("user__last_name", "user__first_name"), 12)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
     context = {
-        "doctors": doctors,
+        "doctors": page_obj,
+        "page_obj": page_obj,
         "specialties": specialties,
         "selected_specialty": selected_specialty,
+        "query": query,
     }
     return render(request, "appointments/doctor_list.html", context)
 
@@ -165,9 +182,9 @@ def book_appointment(request, slot_id):
                     complaint=complaint,
                     status=Appointment.Status.BOOKED,
                 )
+                # Письмо уходит только после успешного коммита транзакции.
+                transaction.on_commit(lambda: send_booking_confirmation_task.delay(appointment.pk))
 
-            # Отправляем письмо подтверждения (вне транзакции)
-            send_booking_confirmation(appointment)
             messages.success(
                 request,
                 f'Вы успешно записаны на {slot.date.strftime("%d.%m.%Y")} '
@@ -221,7 +238,7 @@ def cancel_appointment(request, appointment_id):
         return redirect("appointments:my_appointments")
 
     appointment.cancel()
-    send_cancellation_notice(appointment)
+    send_cancellation_notice_task.delay(appointment.pk)
     messages.success(request, "Запись успешно отменена.")
     return redirect("appointments:my_appointments")
 
@@ -256,7 +273,7 @@ def doctor_dashboard(request):
         Appointment.objects.filter(
             slot__doctor_profile=doctor_profile,
             slot__date__gt=today,
-            status=Appointment.Status.BOOKED,
+            status__in=[Appointment.Status.BOOKED, Appointment.Status.CONFIRMED],
         )
         .select_related("patient", "slot__room")
         .order_by("slot__date", "slot__start_time")[:20]
@@ -291,6 +308,9 @@ def mark_attendance(request, appointment_id):
     elif action == "no_show":
         appointment.mark_no_show()
         messages.warning(request, f"Неявка пациента {appointment.patient.full_name} отмечена.")
+    elif action == "confirm":
+        appointment.confirm()
+        messages.success(request, f"Запись пациента {appointment.patient.full_name} подтверждена.")
     else:
         messages.error(request, "Неизвестное действие.")
 
@@ -382,16 +402,21 @@ def manage_schedule(request):
                 messages.error(request, "Выберите врача.")
                 return redirect("appointments:manage_schedule")
 
-            schedule, created = Schedule.objects.update_or_create(
-                doctor_profile_id=int(doctor_id),
-                date=date_val,
-                defaults={
-                    "room_id": int(room_id) if room_id else None,
-                    "start_time": start_time,
-                    "end_time": end_time,
-                    "slot_duration": slot_duration,
-                },
-            )
+            try:
+                schedule, created = Schedule.objects.update_or_create(
+                    doctor_profile_id=int(doctor_id),
+                    date=date_val,
+                    defaults={
+                        "room_id": int(room_id) if room_id else None,
+                        "start_time": start_time,
+                        "end_time": end_time,
+                        "slot_duration": slot_duration,
+                    },
+                )
+            except ValidationError as exc:
+                messages.error(request, " ".join(exc.messages))
+                return redirect("appointments:manage_schedule")
+
             action_text = "создано" if created else "обновлено"
             messages.success(request, f"Расписание {action_text} успешно. Слоты сгенерированы.")
 
@@ -505,8 +530,12 @@ def user_list(request):
         "sysadmins": User.objects.filter(role=User.Role.SYSADMIN).count(),
     }
 
+    paginator = Paginator(users, 20)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
     context = {
-        "users": users,
+        "users": page_obj,
+        "page_obj": page_obj,
         "stats": stats,
         "role_filter": role_filter,
         "search_query": search_query,
@@ -675,6 +704,6 @@ def admin_cancel_appointment(request, appointment_id):
     """Администратор отменяет запись пациента."""
     appointment = get_object_or_404(Appointment, pk=appointment_id)
     appointment.cancel()
-    send_cancellation_notice(appointment)
+    send_cancellation_notice_task.delay(appointment.pk)
     messages.success(request, f"Запись пациента {appointment.patient.full_name} отменена.")
     return redirect("appointments:admin_dashboard")

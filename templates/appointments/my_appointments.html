@@ -41,7 +41,11 @@
             {% endif %}
           </div>
           <div class="ar-actions">
+            {% if appt.status == 'confirmed' %}
+            <span class="badge bg-info-subtle text-info mb-2 d-block">Подтверждено</span>
+            {% else %}
             <span class="badge bg-primary-subtle text-primary mb-2 d-block">Забронировано</span>
+            {% endif %}
             <form method="post" action="{% url 'appointments:cancel' appt.pk %}"
                   onsubmit="return confirm('Отменить запись к {{ appt.slot.doctor_profile.user.full_name }} на {{ appt.slot.date|date:"d.m.Y" }}?')">
               {% csrf_token %}

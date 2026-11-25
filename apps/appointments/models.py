@@ -7,8 +7,9 @@
   Appointment — запись пациента на слот
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -91,13 +92,6 @@ class Schedule(models.Model):
     def __str__(self):
         return f"{self.doctor_profile} | {self.date} {self.start_time}–{self.end_time}"
 
-    def clean(self):
-        """Валидация: время начала должно быть раньше времени окончания."""
-        from django.core.exceptions import ValidationError
-
-        if self.start_time and self.end_time and self.start_time >= self.end_time:
-            raise ValidationError({"end_time": "Время окончания должно быть позже времени начала."})
-
     def save(self, *args, **kwargs):
         # Валидация перед сохранением
         self.full_clean()
@@ -106,51 +100,33 @@ class Schedule(models.Model):
 
     def _generate_slots(self):
         """Генерирует временны́е слоты на основе расписания."""
-        # Удаляем только свободные слоты (занятые не трогаем)
-        self.slots.filter(is_booked=False).delete()
+        from .services import generate_slots
 
-        # Преобразуем строки в нужные типы если пришли из POST
-        slot_date = self.date
-        slot_start = self.start_time
-        slot_end = self.end_time
+        generate_slots(self)
 
-        if isinstance(slot_date, str):
-            from datetime import date as date_type
+    def clean(self):
+        super().clean()
+        if self.start_time and self.end_time and self.start_time >= self.end_time:
+            raise ValidationError({"end_time": "Время окончания должно быть позже начала."})
 
-            slot_date = date_type.fromisoformat(slot_date)
-        if isinstance(slot_start, str):
-            from datetime import time as time_type
-
-            h, m = slot_start.split(":")[:2]
-            slot_start = time_type(int(h), int(m))
-        if isinstance(slot_end, str):
-            from datetime import time as time_type
-
-            h, m = slot_end.split(":")[:2]
-            slot_end = time_type(int(h), int(m))
-
-        start = datetime.combine(slot_date, slot_start)
-        end = datetime.combine(slot_date, slot_end)
-        delta = timedelta(minutes=self.slot_duration)
-
-        current = start
-        slots_to_create = []
-        while current + delta <= end:
-            # Не создаём слот, если он уже существует (занятый)
-            if not self.slots.filter(start_time=current.time()).exists():
-                slots_to_create.append(
-                    TimeSlot(
-                        schedule=self,
-                        doctor_profile=self.doctor_profile,
-                        date=self.date,
-                        start_time=current.time(),
-                        end_time=(current + delta).time(),
-                        room=self.room,
+        if self.room_id and self.date and self.start_time and self.end_time:
+            overlapping = (
+                Schedule.objects.filter(room_id=self.room_id, date=self.date)
+                .exclude(pk=self.pk)
+                .select_related("doctor_profile__user")
+            )
+            for other in overlapping:
+                if self.start_time < other.end_time and other.start_time < self.end_time:
+                    raise ValidationError(
+                        {
+                            "room": (
+                                f"Кабинет {self.room.number} уже занят врачом "
+                                f"{other.doctor_profile.user.full_name} "
+                                f"с {other.start_time.strftime('%H:%M')} "
+                                f"до {other.end_time.strftime('%H:%M')}."
+                            )
+                        }
                     )
-                )
-            current += delta
-
-        TimeSlot.objects.bulk_create(slots_to_create)
 
 
 class TimeSlot(models.Model):
@@ -263,6 +239,10 @@ class Appointment(models.Model):
                 name="unique_active_appointment_per_slot",
             ),
         ]
+        indexes = [
+            models.Index(fields=["status"], name="appt_status_idx"),
+            models.Index(fields=["patient", "-created_at"], name="appt_patient_created_idx"),
+        ]
 
     def __str__(self):
         return (
@@ -276,6 +256,11 @@ class Appointment(models.Model):
         self.status = self.Status.CANCELLED
         self.slot.is_booked = False
         self.slot.save(update_fields=["is_booked"])
+        self.save(update_fields=["status", "updated_at"])
+
+    def confirm(self):
+        """Подтвердить запись (администратор или врач)."""
+        self.status = self.Status.CONFIRMED
         self.save(update_fields=["status", "updated_at"])
 
     def mark_attended(self):

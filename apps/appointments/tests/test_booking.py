@@ -3,6 +3,7 @@
 from datetime import datetime, time, timedelta
 from unittest.mock import patch
 
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -165,3 +166,97 @@ class SlotDateTest(TestCase):
         )
         slot = TimeSlot.objects.filter(schedule=schedule).first()
         self.assertFalse(slot.is_available)
+
+
+class RoomConflictTest(TestCase):
+    """Два врача не могут одновременно принимать в одном кабинете."""
+
+    def setUp(self):
+        self.specialty = Specialty.objects.create(name="Терапия")
+        self.room = Room.objects.create(number="404", name="Терапия")
+        self.day = timezone.localdate() + timedelta(days=3)
+        self.first = DoctorProfile.objects.create(
+            user=User.objects.create_user(
+                username="doctor_room1", password="pass12345", role=User.Role.DOCTOR
+            ),
+            specialty=self.specialty,
+        )
+        self.second = DoctorProfile.objects.create(
+            user=User.objects.create_user(
+                username="doctor_room2", password="pass12345", role=User.Role.DOCTOR
+            ),
+            specialty=self.specialty,
+        )
+        Schedule.objects.create(
+            doctor_profile=self.first,
+            room=self.room,
+            date=self.day,
+            start_time=time(9, 0),
+            end_time=time(12, 0),
+            slot_duration=30,
+        )
+
+    def test_overlapping_room_is_rejected(self):
+        with self.assertRaises(ValidationError):
+            Schedule.objects.create(
+                doctor_profile=self.second,
+                room=self.room,
+                date=self.day,
+                start_time=time(11, 0),
+                end_time=time(13, 0),
+                slot_duration=30,
+            )
+
+    def test_non_overlapping_room_is_allowed(self):
+        schedule = Schedule.objects.create(
+            doctor_profile=self.second,
+            room=self.room,
+            date=self.day,
+            start_time=time(12, 0),
+            end_time=time(14, 0),
+            slot_duration=30,
+        )
+        self.assertEqual(schedule.slots.count(), 4)
+
+    def test_invalid_time_range_is_rejected(self):
+        with self.assertRaises(ValidationError):
+            Schedule.objects.create(
+                doctor_profile=self.second,
+                room=self.room,
+                date=self.day,
+                start_time=time(15, 0),
+                end_time=time(14, 0),
+                slot_duration=30,
+            )
+
+
+class AppointmentStatusTest(TestCase):
+    def test_confirm_changes_status(self):
+        specialty = Specialty.objects.create(name="Кардиология")
+        room = Room.objects.create(number="405", name="Кардиология")
+        doctor = DoctorProfile.objects.create(
+            user=User.objects.create_user(
+                username="doctor_confirm", password="pass12345", role=User.Role.DOCTOR
+            ),
+            specialty=specialty,
+        )
+        patient = User.objects.create_user(
+            username="patient_confirm", password="pass12345", role=User.Role.PATIENT
+        )
+        schedule = Schedule.objects.create(
+            doctor_profile=doctor,
+            room=room,
+            date=timezone.localdate() + timedelta(days=4),
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            slot_duration=30,
+        )
+        appointment = Appointment.objects.create(
+            patient=patient,
+            slot=TimeSlot.objects.filter(schedule=schedule).first(),
+        )
+
+        appointment.confirm()
+
+        appointment.refresh_from_db()
+        self.assertEqual(appointment.status, Appointment.Status.CONFIRMED)

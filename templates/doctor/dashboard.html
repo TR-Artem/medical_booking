@@ -47,6 +47,8 @@
           <td>
             {% if appt.status == 'booked' %}
               <span class="badge bg-primary-subtle text-primary">Ожидается</span>
+            {% elif appt.status == 'confirmed' %}
+              <span class="badge bg-info-subtle text-info">Подтверждено</span>
             {% elif appt.status == 'completed' %}
               <span class="badge bg-success-subtle text-success">Явился</span>
             {% elif appt.status == 'no_show' %}
@@ -56,8 +58,17 @@
             {% endif %}
           </td>
           <td class="text-end">
-            {% if appt.status == 'booked' %}
+            {% if appt.status == 'booked' or appt.status == 'confirmed' %}
             <div class="btn-group btn-group-sm">
+              {% if appt.status == 'booked' %}
+              <form method="post" action="{% url 'appointments:mark_attendance' appt.pk %}" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="confirm">
+                <button type="submit" class="btn btn-outline-primary" title="Подтвердить запись">
+                  <i class="bi bi-calendar-check"></i>
+                </button>
+              </form>
+              {% endif %}
               <form method="post" action="{% url 'appointments:mark_attendance' appt.pk %}" class="d-inline">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="attended">

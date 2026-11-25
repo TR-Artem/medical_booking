@@ -184,6 +184,24 @@
         <p class="mb-0">Пользователи не найдены</p>
       </div>
       {% endif %}
+
+      {% if page_obj.has_other_pages %}
+      <nav class="mt-4" aria-label="Постраничная навигация">
+        <ul class="pagination justify-content-center mb-0">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">Назад</a>
+          </li>
+          {% endif %}
+          <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span></li>
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">Вперёд</a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
     </div>
   </div>
 

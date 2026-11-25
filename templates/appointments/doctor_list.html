@@ -9,6 +9,24 @@
     <p class="text-muted">Выберите врача и запишитесь онлайн</p>
   </div>
 
+  <!-- Поиск -->
+  <form method="get" class="row g-2 mb-4">
+    <div class="col-md-8">
+      <div class="input-group">
+        <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+        <input type="search" name="q" value="{{ query }}" class="form-control"
+               placeholder="Врач или специальность">
+        {% if selected_specialty %}<input type="hidden" name="specialty" value="{{ selected_specialty.pk }}">{% endif %}
+      </div>
+    </div>
+    <div class="col-md-4 d-flex gap-2">
+      <button type="submit" class="btn btn-primary flex-fill">Найти</button>
+      {% if query or selected_specialty %}
+      <a href="{% url 'appointments:doctor_list' %}" class="btn btn-outline-secondary">Сбросить</a>
+      {% endif %}
+    </div>
+  </form>
+
   <!-- Фильтр по специальности -->
   <div class="spec-filter mb-5">
     <a href="{% url 'appointments:doctor_list' %}"
@@ -16,7 +34,7 @@
       Все специальности
     </a>
     {% for spec in specialties %}
-    <a href="?specialty={{ spec.pk }}"
+    <a href="?specialty={{ spec.pk }}{% if query %}&q={{ query|urlencode }}{% endif %}"
        class="spec-chip {% if selected_specialty.pk == spec.pk %}spec-chip--active{% endif %}">
       <i class="bi {{ spec.icon|default:'bi-heart-pulse' }} me-1"></i>{{ spec.name }}
     </a>
@@ -62,12 +80,30 @@
   {% else %}
   <div class="text-center py-5 text-muted">
     <i class="bi bi-person-x fs-1 mb-3 d-block opacity-50"></i>
-    <h5>Врачи не найдены</h3>
-    <p>Попробуйте выбрать другую специальность</p>
+    <h3 class="h5">Врачи не найдены</h3>
+    <p>Попробуйте выбрать другую специальность или изменить запрос</p>
     <a href="{% url 'appointments:doctor_list' %}" class="btn btn-outline-primary btn-sm">
       Сбросить фильтр
     </a>
   </div>
+  {% endif %}
+
+  {% if page_obj.has_other_pages %}
+  <nav class="mt-4" aria-label="Постраничная навигация">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_specialty %}&specialty={{ selected_specialty.pk }}{% endif %}{% if query %}&q={{ query|urlencode }}{% endif %}">Назад</a>
+      </li>
+      {% endif %}
+      <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span></li>
+      {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_specialty %}&specialty={{ selected_specialty.pk }}{% endif %}{% if query %}&q={{ query|urlencode }}{% endif %}">Вперёд</a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
   {% endif %}
 
 </div>

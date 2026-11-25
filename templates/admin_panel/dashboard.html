@@ -95,6 +95,8 @@
           <td>
             {% if appt.status == 'booked' %}
               <span class="badge bg-primary-subtle text-primary">Забронировано</span>
+            {% elif appt.status == 'confirmed' %}
+              <span class="badge bg-info-subtle text-info">Подтверждено</span>
             {% elif appt.status == 'completed' %}
               <span class="badge bg-success-subtle text-success">Завершено</span>
             {% elif appt.status == 'no_show' %}
@@ -102,7 +104,7 @@
             {% endif %}
           </td>
           <td class="text-end">
-            {% if appt.status == 'booked' %}
+            {% if appt.status == 'booked' or appt.status == 'confirmed' %}
             <form method="post" action="{% url 'appointments:admin_cancel' appt.pk %}"
                   onsubmit="return confirm('Отменить запись?')">
               {% csrf_token %}
